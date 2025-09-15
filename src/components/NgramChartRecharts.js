@@ -24,11 +24,20 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [selectedYear, setSelectedYear] = useState(null);
     const [selectedWord, setSelectedWord] = useState(null);
-    const colorPalettes = {
-        standard: ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'],
-        colorblind: ['#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2'],
-        bw: ['#000000', '#444444', '#888888', '#CCCCCC', '#EEEEEE']
-    };
+const colorPalettes = {
+    standard: [
+        '#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', // original 5
+        '#6f42c1', '#fd7e14', '#20c997', '#6610f2', '#343a40'  // ekstra 5
+    ],
+    colorblind: [
+        '#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2', // original 5
+        '#D55E00', '#CC79A7', '#999999', '#000000', '#FFFFFF'  // ekstra 5
+    ],
+    bw: [
+        '#000000', '#CCCCCC', '#AAAAAA', '#F5F5F5','#888888','#EEEEEE',  '#DDDDDD','#444444',   // original 5
+        '#222222', '#666666'  // ekstra 5
+    ]
+};
     const palette = settings.palette || 'standard';
     const colors = colorPalettes[palette];
     const [isNarrow, setIsNarrow] = useState(false);
