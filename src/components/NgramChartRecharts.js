@@ -1,15 +1,64 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Container, Button, ButtonGroup, Modal } from 'react-bootstrap';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { Button, Modal } from 'react-bootstrap';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import * as XLSX from 'xlsx';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
-import { FaUndo, FaFileImage } from 'react-icons/fa'; // Legg til FaFileImage
+import { FaUndo } from 'react-icons/fa';
+
+const AUTO_PERCENT_THRESHOLD = 0.01;
+const PERCENT_SCALING = 100;
+const PPM_SCALING = 1000000;
+const TRACKER_ALPHA = 0.65;
+const formatNumberNoGrouping = (value, maxDecimals = 6) => (
+    new Intl.NumberFormat('no-NO', {
+        useGrouping: false,
+        maximumFractionDigits: maxDecimals
+    }).format(value)
+);
+const withAlpha = (color, alpha = TRACKER_ALPHA) => {
+    if (typeof color !== 'string') {
+        return color;
+    }
+
+    const normalized = color.trim();
+    if (!normalized.startsWith('#')) {
+        return color;
+    }
+
+    let hex = normalized.slice(1);
+    if (hex.length === 3) {
+        hex = hex.split('').map((char) => char + char).join('');
+    }
+    if (hex.length !== 6) {
+        return color;
+    }
+
+    const r = Number.parseInt(hex.slice(0, 2), 16);
+    const g = Number.parseInt(hex.slice(2, 4), 16);
+    const b = Number.parseInt(hex.slice(4, 6), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 // Register Chart.js components and zoom plugin
 Chart.register(...registerables, zoomPlugin);
 
-const NgramChartRecharts = ({ data, graphType = 'relative', settings = { 
+const colorPalettes = {
+    standard: [
+        '#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8',
+        '#6f42c1', '#fd7e14', '#20c997', '#6610f2', '#343a40'
+    ],
+    colorblind: [
+        '#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2',
+        '#D55E00', '#CC79A7', '#999999', '#000000', '#FFFFFF'
+    ],
+    bw: [
+        '#000000', '#CCCCCC', '#AAAAAA', '#F5F5F5', '#888888',
+        '#EEEEEE', '#DDDDDD', '#444444', '#222222', '#666666'
+    ]
+};
+
+const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     capitalization: false, 
     smoothing: 4,
     zoomStart: MIN_YEAR,
@@ -17,32 +66,17 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
 }, corpus: corpusType }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
+    const lastZoomOrPanAtRef = useRef(0);
     const [isZoomed, setIsZoomed] = useState(false);
-    const [zoomStart, setZoomStart] = useState(MIN_YEAR);
-    const [zoomEnd, setZoomEnd] = useState(MAX_YEAR);
-    const [currentZoomState, setCurrentZoomState] = useState(null);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [selectedYear, setSelectedYear] = useState(null);
     const [selectedWord, setSelectedWord] = useState(null);
-const colorPalettes = {
-    standard: [
-        '#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', // original 5
-        '#6f42c1', '#fd7e14', '#20c997', '#6610f2', '#343a40'  // ekstra 5
-    ],
-    colorblind: [
-        '#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2', // original 5
-        '#D55E00', '#CC79A7', '#999999', '#000000', '#FFFFFF'  // ekstra 5
-    ],
-    bw: [
-        '#000000', '#CCCCCC', '#AAAAAA', '#F5F5F5','#888888','#EEEEEE',  '#DDDDDD','#444444',   // original 5
-        '#222222', '#666666'  // ekstra 5
-    ]
-};
     const palette = settings.palette || 'standard';
-    const colors = colorPalettes[palette];
+    const colors = useMemo(() => colorPalettes[palette] || colorPalettes.standard, [palette]);
     const [isNarrow, setIsNarrow] = useState(false);
     // Add resize observer to detect container width
     useEffect(() => {
+        const observedElement = chartRef.current ? chartRef.current.parentElement : null;
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 const width = entry.contentRect.width;
@@ -50,23 +84,28 @@ const colorPalettes = {
             }
         });
         
-        if (chartRef.current) {
-            resizeObserver.observe(chartRef.current.parentElement);
+        if (observedElement) {
+            resizeObserver.observe(observedElement);
         }
 
         return () => {
-            if (chartRef.current) {
-                resizeObserver.unobserve(chartRef.current.parentElement);
+            if (observedElement) {
+                resizeObserver.unobserve(observedElement);
             }
         };
     }, []);
 
-    const handleChartClick = (event) => {
+    const handleChartClick = useCallback((event) => {
         const chart = chartInstance.current;
         if (!chart) return;
 
+        // Prevent click action immediately after zoom/pan drag end.
+        if (Date.now() - lastZoomOrPanAtRef.current < 300) {
+            return;
+        }
+
         // Check if we're in the middle of a zoom operation
-        if (event.native.ctrlKey || event.native.shiftKey) {
+        if (event.native?.ctrlKey || event.native?.shiftKey) {
             return;  // Don't trigger search during zoom
         }
 
@@ -83,7 +122,7 @@ const colorPalettes = {
         setSelectedYear(year);
         setSelectedWord(word);
         setShowSearchModal(true);
-    };
+    }, [data]);
 
     const openSearch = (period) => {
         if (!selectedWord || !selectedYear) return;
@@ -104,6 +143,10 @@ const colorPalettes = {
                 fromDate = '';
                 toDate = '';
                 break;
+            default:
+                fromDate = '';
+                toDate = '';
+                break;
         }
 
         const mediatype = corpusType === 'avis' ? 'aviser' : 'bøker';
@@ -116,32 +159,34 @@ const colorPalettes = {
         if (chartInstance.current) {
             chartInstance.current.resetZoom();
             setIsZoomed(false);
-            setZoomStart(null);
-            setZoomEnd(null);
-            setCurrentZoomState(null);
         }
     };
 
     useEffect(() => {
         if (!data || !data.series) return;
 
-// ...inne i useEffect, før datasets lages...
-        const scaling = settings.scaling !== undefined ? settings.scaling : 100; // 100 for prosent som default
+        const maxRelativePercent = data.series.reduce((maxValue, series) => {
+            const seriesMax = series.data.reduce(
+                (seriesValue, point) => Math.max(seriesValue, Number(point) || 0),
+                0
+            );
+            return Math.max(maxValue, seriesMax);
+        }, 0);
 
+        const requestedScaling = settings.scaling ?? 'auto';
+        const effectiveScaling = graphType !== 'relative'
+            ? PERCENT_SCALING
+            : (requestedScaling === 'auto'
+                ? (maxRelativePercent >= AUTO_PERCENT_THRESHOLD ? PERCENT_SCALING : PPM_SCALING)
+                : Number.parseInt(requestedScaling, 10) || PERCENT_SCALING);
+        const scalingFactor = effectiveScaling / 100;
+        const relativeUnitLabel = effectiveScaling === PPM_SCALING ? 'ppm' : '%';
 
-        // Log raw data for debugging
-        console.log('Raw data from API:', data);
-        data.series.forEach(series => {
-            console.log(`Series ${series.name} values:`, series.data);
-        });
 
         // Transform data for Chart.js
         const labels = data.dates;
         const datasets = data.series.map((series, index) => {
             let values = [...series.data];
-            
-            // Log raw values for debugging
-            console.log(`Raw values for ${series.name}:`, values);
             
             // Apply smoothing if enabled
             if (settings.smoothing > 0) {
@@ -154,7 +199,6 @@ const colorPalettes = {
                     smoothed.push(avg);
                 }
                 values = smoothed;
-                console.log(`Smoothed values for ${series.name}:`, values);
             }
             
             // Handle cumulative data
@@ -164,7 +208,6 @@ const colorPalettes = {
                     sum += val;
                     return sum;
                 });
-                console.log(`Cumulative values for ${series.name}:`, values);
             }
             
             // Remove unnecessary absolute value conversion
@@ -190,13 +233,8 @@ const colorPalettes = {
 
             // Legg til multiplikator for relativ visning
                 if (graphType === 'relative') {
-                    values = values.map(v => v * scaling/100);
+                    values = values.map(v => v * scalingFactor);
                 }
-
-
-
-            const strokeWidth = settings?.lineThickness || 2;
-
             return {
                 label: series.name,
                 data: values,
@@ -204,12 +242,12 @@ const colorPalettes = {
                 backgroundColor: colors[index % colors.length],  // Bruk valgt palett
                 borderWidth: settings?.lineThickness || 2,
                 pointRadius: 0,
-                pointHoverRadius: 12,
-                pointHitRadius: 20,
+                pointHoverRadius: 10,
+                pointHitRadius: 16,
                 pointStyle: 'circle',
                 tension: 0.4,
                 showLine: true,
-                pointBackgroundColor: colors[index % colors.length], // Bruk valgt palett
+                pointBackgroundColor: withAlpha(colors[index % colors.length]),
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2
             };
@@ -247,16 +285,8 @@ const colorPalettes = {
                             mode: 'x',
                             modifierKey: 'ctrl',
                             onPan: () => {
-                                setIsZoomed(true);
-                                if (chartInstance.current) {
-                                    const chart = chartInstance.current;
-                                    const start = Math.max(MIN_YEAR, chart.scales.x.min);
-                                    const end = Math.min(MAX_YEAR, chart.scales.x.max);
-                                    setZoomStart(Math.round(start));
-                                    setZoomEnd(Math.round(end));
-                                    setCurrentZoomState({ start, end });
-                                    chart.update('none'); // Update without animation
-                                }
+                                lastZoomOrPanAtRef.current = Date.now();
+                                setIsZoomed((prev) => (prev ? prev : true));
                             }
                         },
                         zoom: {
@@ -274,14 +304,12 @@ const colorPalettes = {
                                 borderWidth: 1
                             },
                             mode: 'x',
-                            onZoom: ({chart}) => {
-                                setIsZoomed(true);
-                                const start = Math.max(MIN_YEAR, chart.scales.x.min);
-                                const end = Math.min(MAX_YEAR, chart.scales.x.max);
-                                setZoomStart(Math.round(start));
-                                setZoomEnd(Math.round(end));
-                                setCurrentZoomState({ start, end });
-                                chart.update('none'); // Update without animation
+                            onZoom: () => {
+                                lastZoomOrPanAtRef.current = Date.now();
+                                setIsZoomed((prev) => (prev ? prev : true));
+                            },
+                            onZoomComplete: () => {
+                                lastZoomOrPanAtRef.current = Date.now();
                             }
                         },
                         limits: {
@@ -309,14 +337,33 @@ const colorPalettes = {
                         enabled: true,
                         mode: 'index',
                         intersect: false,
+                        backgroundColor: 'rgba(238, 238, 238, 0.96)',
+                        titleColor: '#1f1f1f',
+                        bodyColor: '#1f1f1f',
+                        borderColor: '#d2d2d2',
+                        borderWidth: 1,
                         callbacks: {
+                            title: function(context) {
+                                const point = context?.[0];
+                                const parsedYear = Number(point?.parsed?.x);
+                                if (Number.isFinite(parsedYear)) {
+                                    return String(Math.round(parsedYear));
+                                }
+
+                                const fallbackLabel = String(point?.label ?? '').replace(/[^\d.-]/g, '');
+                                const fallbackYear = Number(fallbackLabel);
+                                return Number.isFinite(fallbackYear) ? String(Math.round(fallbackYear)) : '';
+                            },
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) {
                                     label += ': ';
                                 }
                                 if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('no-NO').format(context.parsed.y);
+                                    label += formatNumberNoGrouping(context.parsed.y);
+                                    if (graphType === 'relative') {
+                                        label += ` ${relativeUnitLabel}`;
+                                    }
                                 }
                                 return label;
                             }
@@ -327,11 +374,11 @@ const colorPalettes = {
                     x: {
                         type: 'linear',
                         position: 'bottom',
-                        min: currentZoomState ? Math.floor(currentZoomState.start) : settings.zoomStart,
-                        max: currentZoomState ? Math.ceil(currentZoomState.end) : chartMaxYear, // settings.zoomEnd,
+                        min: settings.zoomStart,
+                        max: chartMaxYear,
                         ticks: {
                             callback: function(value) {
-                                return Math.round(value);
+                                return String(Math.round(value));
                             },
                             stepSize: 1,
                             autoSkip: true,         // Legg til denne
@@ -340,9 +387,14 @@ const colorPalettes = {
                     },
                     y: {
                         beginAtZero: true,
+                        title: {
+                            display: graphType === 'relative',
+                            text: graphType === 'relative' ? `Frekvens (${relativeUnitLabel})` : ''
+                        },
                         ticks: {
                             callback: function(value) {
-                                return new Intl.NumberFormat('no-NO').format(value);
+                                const formatted = formatNumberNoGrouping(value);
+                                return graphType === 'relative' ? `${formatted} ${relativeUnitLabel}` : formatted;
                             }
                         }
                     }
@@ -356,7 +408,7 @@ const colorPalettes = {
                 chartInstance.current.destroy();
             }
         };
-    }, [data, graphType, currentZoomState, settings.smoothing, settings.lineThickness, settings.lineTransparency, isNarrow, settings.zoomStart, settings.zoomEnd, settings.scaling]);
+    }, [data, graphType, settings.smoothing, settings.lineThickness, settings.lineTransparency, isNarrow, settings.zoomStart, settings.zoomEnd, settings.scaling, colors, handleChartClick]);
 
     return (
         <div className="d-flex flex-column flex-lg-row gap-3">
@@ -384,7 +436,25 @@ const colorPalettes = {
                 </div>
                 <div className="text-center mt-2">
                     <small className="text-muted">
-                        Klikk å dra for å indikere en periode (zoom inn)
+                        Klikk og dra for å zoome inn. Klikk{' '}
+                        <button
+                            type="button"
+                            onClick={resetZoom}
+                            disabled={!isZoomed}
+                            style={{
+                                border: 'none',
+                                background: 'none',
+                                padding: 0,
+                                margin: 0,
+                                color: isZoomed ? 'inherit' : '#9aa0a6',
+                                textDecoration: 'underline',
+                                cursor: isZoomed ? 'pointer' : 'default'
+                            }}
+                            aria-label="Ga tilbake eller zoome ut"
+                        >
+                            her <FaUndo style={{ marginTop: '-2px' }} />
+                        </button>{' '}
+                        for å gå tilbake eller zoome ut.
                     </small>
                 </div>
             </div>
@@ -393,10 +463,14 @@ const colorPalettes = {
             </div>
             <Modal show={showSearchModal} onHide={() => setShowSearchModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Søk i Nasjonalbiblioteket</Modal.Title>
+                    <Modal.Title>
+                        Søk i Nasjonalbiblioteket: {selectedWord ? `"${selectedWord}"` : ''}
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <p>Velg tidsperiode for søk i Nasjonalbiblioteket:</p>
+                    <p>
+                        Velg tidsperiode for {selectedWord ? `"${selectedWord}"` : 'ordet'}{selectedYear ? ` (${selectedYear})` : ''}:
+                    </p>
                     <div className="d-flex gap-2">
                         <Button variant="outline-primary" onClick={() => openSearch('exact')}>
                             Nøyaktig år

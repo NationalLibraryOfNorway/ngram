@@ -1,7 +1,8 @@
 // Constants for n-gram processing
 const MIN_YEAR = 1810;
 const MAX_YEAR = new Date().getFullYear();
-const NGRAM_API = 'https://api.nb.no/dhlab/nb_ngram/ngram/query';
+const NGRAM_API = process.env.REACT_APP_NGRAM_API || 'https://api.nb.no/dhlab/nb_ngram/ngram/query';
+const REQUEST_TIMEOUT_MS = 30000;
 
 // Process n-gram data
 const processNgramData = (data, mode, smooth) => {
@@ -98,23 +99,22 @@ const fetchNgramData = async (words, corpus, lang, graphType = 'relative', setti
         });
 
         const url = `${NGRAM_API}?${params.toString()}`;
-        console.log('DEBUG - API URL:', url);
-
-        const response = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API Error Response:', {
-                status: response.status,
-                statusText: response.statusText,
-                url: url,
-                body: errorText
-            });
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
-        const ngrams = await response.json();
-        console.log('API Response:', JSON.stringify(ngrams, null, 2));
+        let ngrams;
+        try {
+            ngrams = await response.json();
+        } catch {
+            throw new Error('Kunne ikke lese JSON-respons fra N-gram API.');
+        }
         
         // Process the raw ngram data
         const processedData = {
@@ -144,8 +144,6 @@ const fetchNgramData = async (words, corpus, lang, graphType = 'relative', setti
         ngrams.forEach(ngram => {
             if (ngram && ngram.values) {
                 const values = ngram.values;
-                console.log('Processing ngram:', ngram.key, 'Values:', values);
-
                 if (values.length > 0) {
                     // Create a map of year to value for this ngram
                     const yearToValue = new Map(
@@ -187,11 +185,12 @@ const fetchNgramData = async (words, corpus, lang, graphType = 'relative', setti
             }
         });
 
-        console.log('Processed Data:', JSON.stringify(processedData, null, 2));
         return processedData;
     } catch (error) {
-        console.error('Error fetching ngram data:', error);
-        throw error;
+        if (error.name === 'AbortError') {
+            throw new Error('Foresporselen tok for lang tid. Prov igjen.');
+        }
+        throw new Error(error?.message || 'Klarte ikke hente N-gram data.');
     }
 };
 

@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Button, ButtonGroup, InputGroup, Modal, Dropdown, Container } from 'react-bootstrap';
-import { FaBook, FaNewspaper, FaChartLine, FaSearch, FaLanguage, FaTools, FaDownload } from 'react-icons/fa';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Form, Button, ButtonGroup, InputGroup, Modal } from 'react-bootstrap';
+import { FaSearch, FaTools, FaDownload } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
+import { parseLegacyHash } from '../services/legacyHash';
 
 const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange }) => {
-    const [words, setWords] = useState('');
-    const [corpus, setCorpus] = useState('bok');
-    const [lang, setLang] = useState('nob');
-    const [graphType, setGraphType] = useState('relative');
+    const legacyState = useMemo(() => parseLegacyHash(window.location.hash), []);
+    const initialWords = legacyState.words.length > 0 ? legacyState.words.join(', ') : 'demokrati';
+    const [words, setWords] = useState(initialWords);
+    const [corpus, setCorpus] = useState(legacyState.corpus || 'bok');
+    const [lang, setLang] = useState(legacyState.lang || 'nob');
+    const [graphType, setGraphType] = useState(legacyState.graphType || 'relative');
     const [showModal, setShowModal] = useState(false);
     const [showLangDropdown, setShowLangDropdown] = useState(false);
     const [showCorpusDropdown, setShowCorpusDropdown] = useState(false);
     const [showGraphTypeDropdown, setShowGraphTypeDropdown] = useState(false);
     const [showToolsModal, setShowToolsModal] = useState(false);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
-    const [capitalization, setCapitalization] = useState(false);
-    const [smoothing, setSmoothing] = useState(4);
+    const [capitalization, setCapitalization] = useState(Boolean(legacyState.capitalization));
+    const [smoothing, setSmoothing] = useState(legacyState.smoothing ?? 4);
     const [lineThickness, setLineThickness] = useState(2);
     const [lineTransparency, setLineTransparency] = useState(0.1);
     const [palette, setPalette] = useState('standard');
@@ -25,33 +28,42 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
         { id: 'colorblind', label: 'Fargeblindvennlig' },
         { id: 'bw', label: 'Svart/hvitt' }
     ];
-    const [showSettings, setShowSettings] = useState(false);
-    const [scaling, setScaling] = useState(100); // Standard for prosent
-    const [settings, setSettings] = useState({
-        capitalization,
-        smoothing,
-        lineThickness,
-        lineTransparency,
-        scaling,
-        palette,
-        zoomStart: MIN_YEAR,
-        zoomEnd: MAX_YEAR
-    });
+    const [scaling, setScaling] = useState(legacyState.scaling || 'auto');
+    const [zoomStart, setZoomStart] = useState(legacyState.zoomStart || MIN_YEAR);
+    const [zoomEnd, setZoomEnd] = useState(legacyState.zoomEnd || MAX_YEAR);
 
-    const updateCapitalization = (newValue) => {
-        setCapitalization(newValue);
-        setSettings(prev => ({ ...prev, capitalization: newValue }));
-        onSettingsChange?.({ 
-            capitalization: newValue, 
+    const emitSettings = useCallback((overrides = {}) => {
+        onSettingsChange?.({
+            capitalization,
             smoothing,
             lineThickness,
-            lineTransparency
+            lineTransparency,
+            scaling,
+            palette,
+            zoomStart,
+            zoomEnd,
+            ...overrides
         });
+    }, [onSettingsChange, capitalization, smoothing, lineThickness, lineTransparency, scaling, palette, zoomStart, zoomEnd]);
+    const updateCapitalization = (newValue) => {
+        setCapitalization(newValue);
+        emitSettings({ capitalization: newValue });
         // Trigger a new search with updated capitalization setting
         if (words) {
             performSearch();
         }
     };
+
+    const latestWordsRef = useRef(words);
+    const onSearchRef = useRef(onSearch);
+
+    useEffect(() => {
+        latestWordsRef.current = words;
+    }, [words]);
+
+    useEffect(() => {
+        onSearchRef.current = onSearch;
+    }, [onSearch]);
 
     const performSearch = () => {
         const wordList = words.split(',')
@@ -61,23 +73,42 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
         if (wordList.length === 0) {
             return;
         }
-        
-        console.log('Searching with:', {
-            words: wordList,
-            corpus,
-            lang,
-            graphType
-        });
-        
-        onSearch(wordList, corpus, lang, graphType);
+
+        onSearchRef.current(wordList, corpus, lang, graphType);
     };
 
     // Trigger search when parameters change
     useEffect(() => {
-        if (words) {
-            performSearch();
+        const currentWords = latestWordsRef.current;
+        const wordList = currentWords
+            .split(',')
+            .map(w => w.trim())
+            .filter(w => w.length > 0);
+
+        if (wordList.length > 0) {
+            onSearchRef.current(wordList, corpus, lang, graphType);
         }
     }, [corpus, lang, graphType]);
+
+    useEffect(() => {
+        if (legacyState.words.length === 0) {
+            return;
+        }
+
+        onGraphTypeChange(legacyState.graphType || 'relative');
+        emitSettings({
+            capitalization,
+            smoothing,
+            lineThickness,
+            lineTransparency,
+            scaling,
+            palette,
+            zoomStart: legacyState.zoomStart || MIN_YEAR,
+            zoomEnd: legacyState.zoomEnd || MAX_YEAR
+        });
+        // Intentionally run once for legacy hash hydration.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -96,19 +127,6 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
         { id: 'cumulative', label: 'Cumulative Frequency' },
         { id: 'cohort', label: 'Cohort Analysis' }
     ];
-
-    const getCorpusLabel = (corpus) => corpus === 'bok' ? 'Books' : 'Newspapers';
-    const getLangLabel = (lang) => {
-        const labels = {
-            'nob': 'Bokmål',
-            'nno': 'Nynorsk',
-            'sme': 'Northern Sami',
-            'smj': 'Lule Sami',
-            'sma': 'Southern Sami',
-            'fkv': 'Kven'
-        };
-        return labels[lang] || lang;
-    };
 
     const languages = [
         { code: 'nob', label: 'Bokmål', fullName: 'Norsk bokmål' },
@@ -479,15 +497,7 @@ const handleHiResDownloadJPG = () => {
                                         onChange={(e) => {
                                             const newValue = parseInt(e.target.value);
                                             setSmoothing(newValue);
-                                            onSettingsChange?.({ 
-                                                capitalization, 
-                                                smoothing: newValue,
-                                                lineThickness,
-                                                lineTransparency
-                                            });
-                                            if (words) {
-                                                onSearch(words.split(',').map(w => w.trim()).filter(w => w.length > 0), corpus, lang, graphType);
-                                            }
+                                            emitSettings({ smoothing: newValue });
                                         }}
                                     />
                                 </div>
@@ -496,11 +506,9 @@ const handleHiResDownloadJPG = () => {
                                     <Form.Select
                                         value={palette}
                                         onChange={e => {
-                                            setPalette(e.target.value);
-                                            onSettingsChange?.({
-                                                ...settings,
-                                                palette: e.target.value
-                                            });
+                                            const newValue = e.target.value;
+                                            setPalette(newValue);
+                                            emitSettings({ palette: newValue });
                                         }}
                                     >
                                         {palettes.map(p => (
@@ -517,12 +525,7 @@ const handleHiResDownloadJPG = () => {
                                         onChange={(e) => {
                                             const newValue = parseInt(e.target.value);
                                             setLineThickness(newValue);
-                                            onSettingsChange?.({ 
-                                                capitalization, 
-                                                smoothing,
-                                                lineThickness: newValue,
-                                                lineTransparency
-                                            });
+                                            emitSettings({ lineThickness: newValue });
                                         }}
                                     />
                                 </div>
@@ -536,14 +539,7 @@ const handleHiResDownloadJPG = () => {
                                         onChange={(e) => {
                                             const newValue = parseInt(e.target.value) / 100;
                                             setLineTransparency(newValue);
-                                            onSettingsChange?.({ 
-                                                capitalization, 
-                                                smoothing,
-                                                lineThickness,
-                                                lineTransparency: newValue,
-                                                zoomStart: settings.zoomStart,
-                                                zoomEnd: settings.zoomEnd
-                                            });
+                                            emitSettings({ lineTransparency: newValue });
                                         }}
                                     />
                                 </div>
@@ -553,65 +549,44 @@ const handleHiResDownloadJPG = () => {
                             <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Innstillinger for akser</strong>
                             <div style={{ paddingLeft: '1em' }}>
                                 <div>
-                                    <Form.Label>Multiplikator for y-aksen</Form.Label>
+                                    <Form.Label>Skalering av y-aksen</Form.Label>
                                     <Form.Select
                                         value={scaling}
                                         onChange={e => {
-                                            const value = parseInt(e.target.value, 10);
+                                            const value = e.target.value;
                                             setScaling(value);
-                                            onSettingsChange?.({
-                                                ...settings,
-                                                scaling: value
-                                            });
+                                            emitSettings({ scaling: value });
                                         }}
                                     >
-                                        <option value={1}>1 (ingen)</option>
-                                        <option value={10}>10</option>
-                                        <option value={100}>100 (prosent)</option>
-                                        <option value={1000}>1000 (promille)</option>
-                                        <option value={100000}>100 000 (pr 100 000)</option>
-                                        <option value={1000000}>1 000 000 (ppm parts pr million)</option>
-                                        
+                                        <option value="auto">Auto (% eller ppm)</option>
+                                        <option value="100">Prosent (%)</option>
+                                        <option value="1000000">PPM</option>
                                     </Form.Select>
                                 </div>
                                 <div>
-                                    <Form.Label>Zoom startår: {settings.zoomStart}</Form.Label>
+                                    <Form.Label>Zoom startår: {zoomStart}</Form.Label>
                                     <Form.Range
                                         min={MIN_YEAR}
                                         max={MAX_YEAR}
-                                        value={settings.zoomStart}
+                                        value={zoomStart}
                                         onChange={(e) => {
                                             const newValue = parseInt(e.target.value);
-                                            setSettings(prev => ({ ...prev, zoomStart: newValue }));
-                                            onSettingsChange?.({ 
-                                                capitalization, 
-                                                smoothing,
-                                                lineThickness,
-                                                lineTransparency,
-                                                zoomStart: newValue,
-                                                zoomEnd: settings.zoomEnd
-                                            });
+                                            setZoomStart(newValue);
+                                            emitSettings({ zoomStart: newValue });
                                         }}
                                     />
                                 </div>
 
                                 <div>
-                                    <Form.Label>Zoom sluttår: {settings.zoomEnd}</Form.Label>
+                                    <Form.Label>Zoom sluttår: {zoomEnd}</Form.Label>
                                     <Form.Range
                                         min={MIN_YEAR}
                                         max={MAX_YEAR}
-                                        value={settings.zoomEnd}
+                                        value={zoomEnd}
                                         onChange={(e) => {
                                             const newValue = parseInt(e.target.value);
-                                            setSettings(prev => ({ ...prev, zoomEnd: newValue }));
-                                            onSettingsChange?.({ 
-                                                capitalization, 
-                                                smoothing,
-                                                lineThickness,
-                                                lineTransparency,
-                                                zoomStart: settings.zoomStart,
-                                                zoomEnd: newValue
-                                            });
+                                            setZoomEnd(newValue);
+                                            emitSettings({ zoomEnd: newValue });
                                         }}
                                     />
                                 </div>
