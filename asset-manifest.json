@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/ngram/static/css/main.3ff0f728.css",
-    "main.js": "/ngram/static/js/main.ddee16d8.js",
-    "index.html": "/ngram/index.html",
-    "main.3ff0f728.css.map": "/ngram/static/css/main.3ff0f728.css.map",
-    "main.ddee16d8.js.map": "/ngram/static/js/main.ddee16d8.js.map"
+    "main.css": "/dhlab-app-nb-ngram/static/css/main.3ff0f728.css",
+    "main.js": "/dhlab-app-nb-ngram/static/js/main.54fe4cd3.js",
+    "index.html": "/dhlab-app-nb-ngram/index.html",
+    "main.3ff0f728.css.map": "/dhlab-app-nb-ngram/static/css/main.3ff0f728.css.map",
+    "main.54fe4cd3.js.map": "/dhlab-app-nb-ngram/static/js/main.54fe4cd3.js.map"
   },
   "entrypoints": [
     "static/css/main.3ff0f728.css",
-    "static/js/main.ddee16d8.js"
+    "static/js/main.54fe4cd3.js"
   ]
 }
