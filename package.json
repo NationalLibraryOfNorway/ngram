@@ -2,7 +2,7 @@
   "name": "ngram-pwa",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://www.nb.no/ngram",
+  "homepage": "https://nationallibraryofnorway.github.io/dhlab-app-nb-ngram",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -23,6 +23,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:nb": "PUBLIC_URL=/ngram react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "deploy": "npm run build && npx gh-pages -d build --dotfiles && git add . && git commit -m 'Deploy to GitHub Pages' && git push"

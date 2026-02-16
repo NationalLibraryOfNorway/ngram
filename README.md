@@ -72,6 +72,10 @@ npm start
 npm run build
 ```
 
+### Build Targets
+- `npm run build` builds for GitHub Pages (`/dhlab-app-nb-ngram`).
+- `npm run build:nb` builds for NB production path (`/ngram`).
+
 ## Development Process and AI Assistance
 
 This project serves as a case study for AI-assisted development, particularly in transitioning between different programming ecosystems. It demonstrates how teams with expertise in one technology stack (Python) can successfully develop modern web applications using different technologies (JavaScript/React) with AI assistance.
