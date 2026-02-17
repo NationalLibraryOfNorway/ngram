@@ -61,6 +61,11 @@ const processNgramData = (data, mode, smooth) => {
 // Fetch n-gram data from the API
 const fetchNgramData = async (words, corpus, lang, graphType = 'relative', settings = {}) => {
     try {
+        const trimmedWords = (words || []).map((word) => String(word).trim()).filter(Boolean);
+        if (trimmedWords.length === 0) {
+            throw new Error('Skriv inn minst ett søkeord.');
+        }
+
         // Map corpus and language to correct API values
         const corpusMap = {
             'bok': 'bok',
@@ -88,7 +93,7 @@ const fetchNgramData = async (words, corpus, lang, graphType = 'relative', setti
         };
 
         const params = new URLSearchParams({
-            terms: words.join(','),
+            terms: trimmedWords.join(','),
             lang: apiLang,
             case_sens: settings?.capitalization ? '1' : '0',
             corpus: corpusMap[corpus],

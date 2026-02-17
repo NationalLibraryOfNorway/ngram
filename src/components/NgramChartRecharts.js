@@ -77,6 +77,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
     const zoomWindowRef = useRef(null);
+    const previousHomeRangeRef = useRef({ zoomStart: settings.zoomStart, zoomEnd: settings.zoomEnd });
     const lastZoomOrPanAtRef = useRef(0);
     const [isZoomed, setIsZoomed] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
@@ -173,6 +174,22 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
             setIsZoomed(false);
         }
     };
+
+    useEffect(() => {
+        const previous = previousHomeRangeRef.current;
+        if (
+            previous.zoomStart !== settings.zoomStart ||
+            previous.zoomEnd !== settings.zoomEnd
+        ) {
+            // Home range changed: clear preserved zoom so new period applies immediately.
+            zoomWindowRef.current = null;
+            setIsZoomed(false);
+            previousHomeRangeRef.current = {
+                zoomStart: settings.zoomStart,
+                zoomEnd: settings.zoomEnd
+            };
+        }
+    }, [settings.zoomStart, settings.zoomEnd]);
 
     useEffect(() => {
         if (!data || !data.series) return;
