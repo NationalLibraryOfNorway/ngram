@@ -511,7 +511,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                                     textDecoration: 'underline',
                                     cursor: 'pointer'
                                 }}
-                                aria-label="Ga tilbake eller zoome ut"
+                                aria-label="Gå tilbake eller zoome ut"
                             >
                                 her <FaUndo style={{ marginTop: '-2px' }} />
                             </button>{' '}

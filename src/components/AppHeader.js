@@ -104,7 +104,7 @@ const AppHeader = ({ data, query, settings }) => {
                         target="_blank"
                         rel="noreferrer"
                         className="brand-link"
-                        aria-label="Ga tilbake til nb.no"
+                        aria-label="Gå tilbake til nb.no"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -166,7 +166,7 @@ const AppHeader = ({ data, query, settings }) => {
                     <div style={{ marginBottom: '0.75rem' }}>
                         <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Søk-innstillinger</strong>
                         <div style={{ paddingLeft: '1em' }}>
-                            Skriv inn ett eller flere ord (komma-separert), velg korpus, sprak og grafmodus.
+                            Skriv inn ett eller flere ord (komma-separert), velg korpus, språk og grafmodus.
                             Feltet viser "demokrati" som forslag ved oppstart.
                         </div>
                     </div>
@@ -174,23 +174,23 @@ const AppHeader = ({ data, query, settings }) => {
                     <div style={{ marginBottom: '0.75rem' }}>
                         <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Periodevelger (zoom-home)</strong>
                         <div style={{ paddingLeft: '1em' }}>
-                            Start- og sluttar definerer standardvisning og hva som brukes nar du resetter zoom.
-                            Zoom inn ved a klikke og dra i grafen.
+                            Start- og sluttår definerer standardvisning og hva som brukes når du resetter zoom.
+                            Zoom inn ved å klikke og dra i grafen.
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '0.75rem' }}>
                         <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Grafinnstillinger</strong>
                         <div style={{ paddingLeft: '1em' }}>
-                            Juster utjevning, fargepalett, linjetykkelse, transparens og eventuelt kurvemonstrer.
+                            Juster utjevning, fargepalett, linjetykkelse, transparens og eventuelt kurvemønstre.
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '0.75rem' }}>
                         <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Akse og skala</strong>
                         <div style={{ paddingLeft: '1em' }}>
-                            Relativ visning bruker automatisk <code>%</code> eller <code>ppm</code> basert pa datanivaa.
-                            <code> ppm</code> betyr <em>parts per million</em>, altsa forekomster per 1 000 000 ord.
+                            Relativ visning bruker automatisk <code>%</code> eller <code>ppm</code> basert på datanivå.
+                            <code> ppm</code> betyr <em>parts per million</em>, altså forekomster per 1 000 000 ord.
                         </div>
                     </div>
 
@@ -198,7 +198,7 @@ const AppHeader = ({ data, query, settings }) => {
                         <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Delingsalternativer</strong>
                         <div style={{ paddingLeft: '1em' }}>
                             Last ned dataramme (Excel), lagre grafikk som PNG eller kopier delbar lenke.
-                            Hoyopploselige figurer for publikasjon finnes under nedlastingsknappen i verktoyene.
+                            Høyoppløselige figurer for publikasjon finnes under nedlastingsknappen i verktøyene.
                         </div>
                     </div>
                 </Modal.Body>
