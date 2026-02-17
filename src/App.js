@@ -14,7 +14,8 @@ function App() {
     const [settings, setSettings] = useState({
         capitalization: false,
         smoothing: 4,
-        scaling: 'auto'
+        scaling: 'auto',
+        curvePattern: false
     });
     const [corpus, setCorpus] = useState('');
     const [lastQuery, setLastQuery] = useState({

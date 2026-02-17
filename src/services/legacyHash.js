@@ -6,6 +6,7 @@ const DEFAULT_STATE = {
     capitalization: false,
     smoothing: 3,
     scaling: 'auto',
+    curvePattern: false,
     zoomStart: null,
     zoomEnd: null
 };
@@ -61,6 +62,7 @@ export const parseLegacyHash = (hashValue) => {
         const capitalization = params.get('case') === '1';
         const smoothing = Number.parseInt(params.get('smooth') || '', 10);
         const scaling = params.get('scale') || DEFAULT_STATE.scaling;
+        const curvePattern = params.get('pattern') === '1';
         const zoomStart = Number.parseInt(params.get('from') || '', 10);
         const zoomEnd = Number.parseInt(params.get('to') || '', 10);
 
@@ -72,6 +74,7 @@ export const parseLegacyHash = (hashValue) => {
             capitalization,
             smoothing: Number.isFinite(smoothing) ? smoothing : DEFAULT_STATE.smoothing,
             scaling,
+            curvePattern,
             zoomStart: Number.isFinite(zoomStart) ? zoomStart : DEFAULT_STATE.zoomStart,
             zoomEnd: Number.isFinite(zoomEnd) ? zoomEnd : DEFAULT_STATE.zoomEnd
         };
@@ -122,6 +125,7 @@ export const parseLegacyHash = (hashValue) => {
         capitalization,
         smoothing: Number.isFinite(smoothing) ? smoothing : DEFAULT_STATE.smoothing,
         scaling: DEFAULT_STATE.scaling,
+        curvePattern: DEFAULT_STATE.curvePattern,
         zoomStart,
         zoomEnd
     };

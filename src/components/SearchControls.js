@@ -5,9 +5,11 @@ import * as XLSX from 'xlsx';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
 import { parseLegacyHash } from '../services/legacyHash';
 
+const DEFAULT_START_TERM = 'demokrati';
+
 const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange }) => {
     const legacyState = useMemo(() => parseLegacyHash(window.location.hash), []);
-    const initialWords = legacyState.words.length > 0 ? legacyState.words.join(', ') : 'demokrati';
+    const initialWords = legacyState.words.length > 0 ? legacyState.words.join(', ') : '';
     const [words, setWords] = useState(initialWords);
     const [corpus, setCorpus] = useState(legacyState.corpus || 'bok');
     const [lang, setLang] = useState(legacyState.lang || 'nob');
@@ -22,6 +24,7 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
     const [smoothing, setSmoothing] = useState(legacyState.smoothing ?? 4);
     const [lineThickness, setLineThickness] = useState(2);
     const [lineTransparency, setLineTransparency] = useState(0.1);
+    const [curvePattern, setCurvePattern] = useState(Boolean(legacyState.curvePattern));
     const [palette, setPalette] = useState('standard');
     const palettes = [
         { id: 'standard', label: 'Standard' },
@@ -38,13 +41,14 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
             smoothing,
             lineThickness,
             lineTransparency,
+            curvePattern,
             scaling,
             palette,
             zoomStart,
             zoomEnd,
             ...overrides
         });
-    }, [onSettingsChange, capitalization, smoothing, lineThickness, lineTransparency, scaling, palette, zoomStart, zoomEnd]);
+    }, [onSettingsChange, capitalization, smoothing, lineThickness, lineTransparency, curvePattern, scaling, palette, zoomStart, zoomEnd]);
     const updateCapitalization = (newValue) => {
         setCapitalization(newValue);
         emitSettings({ capitalization: newValue });
@@ -56,6 +60,9 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
 
     const latestWordsRef = useRef(words);
     const onSearchRef = useRef(onSearch);
+    const langDropdownRef = useRef(null);
+    const corpusDropdownRef = useRef(null);
+    const graphTypeDropdownRef = useRef(null);
 
     useEffect(() => {
         latestWordsRef.current = words;
@@ -64,6 +71,43 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
     useEffect(() => {
         onSearchRef.current = onSearch;
     }, [onSearch]);
+
+    useEffect(() => {
+        if (!showLangDropdown && !showCorpusDropdown && !showGraphTypeDropdown) {
+            return;
+        }
+
+        const handlePointerDownOutside = (event) => {
+            const target = event.target;
+            if (
+                !langDropdownRef.current?.contains(target) &&
+                !corpusDropdownRef.current?.contains(target) &&
+                !graphTypeDropdownRef.current?.contains(target)
+            ) {
+                setShowLangDropdown(false);
+                setShowCorpusDropdown(false);
+                setShowGraphTypeDropdown(false);
+            }
+        };
+
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                setShowLangDropdown(false);
+                setShowCorpusDropdown(false);
+                setShowGraphTypeDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDownOutside);
+        document.addEventListener('touchstart', handlePointerDownOutside);
+        document.addEventListener('keydown', handleEscape);
+
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDownOutside);
+            document.removeEventListener('touchstart', handlePointerDownOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [showLangDropdown, showCorpusDropdown, showGraphTypeDropdown]);
 
     const performSearch = () => {
         const wordList = words.split(',')
@@ -92,6 +136,7 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
 
     useEffect(() => {
         if (legacyState.words.length === 0) {
+            onSearchRef.current([DEFAULT_START_TERM], corpus, lang, graphType);
             return;
         }
 
@@ -101,6 +146,7 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
             smoothing,
             lineThickness,
             lineTransparency,
+            curvePattern,
             scaling,
             palette,
             zoomStart: legacyState.zoomStart || MIN_YEAR,
@@ -242,7 +288,7 @@ const handleHiResDownloadJPG = () => {
                             type="text"
                             value={words}
                             onChange={(e) => setWords(e.target.value)}
-                            placeholder="Skriv ord skilt med komma"
+                            placeholder={DEFAULT_START_TERM}
                             aria-label="Search words"
                             style={{ 
                                 borderRight: 'none',
@@ -250,11 +296,15 @@ const handleHiResDownloadJPG = () => {
                                 flex: '1 1 auto'
                             }}
                         />
-                        <div className="dropdown">
+                        <div className="dropdown" ref={langDropdownRef}>
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
                                 type="button"
-                                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                                onClick={() => {
+                                    setShowLangDropdown((prev) => !prev);
+                                    setShowCorpusDropdown(false);
+                                    setShowGraphTypeDropdown(false);
+                                }}
                                 style={{ 
                                     borderLeft: 'none',
                                     borderRadius: '0',
@@ -303,11 +353,15 @@ const handleHiResDownloadJPG = () => {
 
                     <div className="d-flex gap-2">
                     <ButtonGroup>
-                        <div className="dropdown">
+                        <div className="dropdown" ref={corpusDropdownRef}>
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
                                 type="button"
-                                onClick={() => setShowCorpusDropdown(!showCorpusDropdown)}
+                                onClick={() => {
+                                    setShowCorpusDropdown((prev) => !prev);
+                                    setShowLangDropdown(false);
+                                    setShowGraphTypeDropdown(false);
+                                }}
                                 style={{ 
                                     border: 'none'
                                 }}
@@ -339,11 +393,15 @@ const handleHiResDownloadJPG = () => {
                         </div>
                     </ButtonGroup>
 
-                    <div className="dropdown">
+                    <div className="dropdown" ref={graphTypeDropdownRef}>
                         <button
                             className="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
                             type="button"
-                            onClick={() => setShowGraphTypeDropdown(!showGraphTypeDropdown)}
+                            onClick={() => {
+                                setShowGraphTypeDropdown((prev) => !prev);
+                                setShowLangDropdown(false);
+                                setShowCorpusDropdown(false);
+                            }}
                             style={{ 
                                 border: 'none',
                                 position: 'relative',
@@ -476,14 +534,42 @@ const handleHiResDownloadJPG = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <div className="d-grid gap-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                            <Form.Label className="mb-0">Skill mellom stor og liten forbokstav</Form.Label>
-                            <Form.Check 
-                                type="switch"
-                                id="capitalization-switch"
-                                checked={capitalization}
-                                onChange={(e) => updateCapitalization(e.target.checked)}
-                            />
+                        <div>
+                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>
+                                Periodevelger (zoom-home)
+                            </strong>
+                            <div className="text-muted" style={{ fontSize: '0.95em', paddingLeft: '1em' }}>
+                                Definerer start og slutt for standardvisning og reset av zoom.
+                            </div>
+                            <div style={{ paddingLeft: '1em' }}>
+                                <div>
+                                    <Form.Label>Zoom startår: {zoomStart}</Form.Label>
+                                    <Form.Range
+                                        min={MIN_YEAR}
+                                        max={MAX_YEAR}
+                                        value={zoomStart}
+                                        onChange={(e) => {
+                                            const newValue = parseInt(e.target.value);
+                                            setZoomStart(newValue);
+                                            emitSettings({ zoomStart: newValue });
+                                        }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Form.Label>Zoom sluttår: {zoomEnd}</Form.Label>
+                                    <Form.Range
+                                        min={MIN_YEAR}
+                                        max={MAX_YEAR}
+                                        value={zoomEnd}
+                                        onChange={(e) => {
+                                            const newValue = parseInt(e.target.value);
+                                            setZoomEnd(newValue);
+                                            emitSettings({ zoomEnd: newValue });
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                         <div> 
                             <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Grafinnstillinger</strong>
@@ -529,6 +615,19 @@ const handleHiResDownloadJPG = () => {
                                         }}
                                     />
                                 </div>
+                                <div className="d-flex align-items-center justify-content-between mt-2">
+                                    <Form.Label className="mb-0">Kurvemønster</Form.Label>
+                                    <Form.Check
+                                        type="switch"
+                                        id="curve-pattern-switch"
+                                        checked={curvePattern}
+                                        onChange={(e) => {
+                                            const enabled = e.target.checked;
+                                            setCurvePattern(enabled);
+                                            emitSettings({ curvePattern: enabled });
+                                        }}
+                                    />
+                                </div>
                             
                                 <div>
                                     <Form.Label>Transparens: {Math.round(lineTransparency * 100)}%</Form.Label>
@@ -546,7 +645,7 @@ const handleHiResDownloadJPG = () => {
                             </div>
                         </div>
                         <div>
-                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Innstillinger for akser</strong>
+                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Akse og skala</strong>
                             <div style={{ paddingLeft: '1em' }}>
                                 <div>
                                     <Form.Label>Skalering av y-aksen</Form.Label>
@@ -563,31 +662,21 @@ const handleHiResDownloadJPG = () => {
                                         <option value="1000000">PPM</option>
                                     </Form.Select>
                                 </div>
-                                <div>
-                                    <Form.Label>Zoom startår: {zoomStart}</Form.Label>
-                                    <Form.Range
-                                        min={MIN_YEAR}
-                                        max={MAX_YEAR}
-                                        value={zoomStart}
-                                        onChange={(e) => {
-                                            const newValue = parseInt(e.target.value);
-                                            setZoomStart(newValue);
-                                            emitSettings({ zoomStart: newValue });
-                                        }}
-                                    />
+                                <div className="text-muted" style={{ fontSize: '0.9em', marginTop: '0.4rem' }}>
+                                    Auto velger prosent eller ppm basert på datanivå.
                                 </div>
-
-                                <div>
-                                    <Form.Label>Zoom sluttår: {zoomEnd}</Form.Label>
-                                    <Form.Range
-                                        min={MIN_YEAR}
-                                        max={MAX_YEAR}
-                                        value={zoomEnd}
-                                        onChange={(e) => {
-                                            const newValue = parseInt(e.target.value);
-                                            setZoomEnd(newValue);
-                                            emitSettings({ zoomEnd: newValue });
-                                        }}
+                            </div>
+                        </div>
+                        <div>
+                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Søk-innstillinger</strong>
+                            <div style={{ paddingLeft: '1em' }}>
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <Form.Label className="mb-0">Skill mellom stor og liten forbokstav</Form.Label>
+                                    <Form.Check 
+                                        type="switch"
+                                        id="capitalization-switch"
+                                        checked={capitalization}
+                                        onChange={(e) => updateCapitalization(e.target.checked)}
                                     />
                                 </div>
                             </div>

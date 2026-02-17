@@ -33,11 +33,17 @@
 
 .brand-link {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
   text-decoration: none;
   color: #111111;
   white-space: nowrap;
+}
+
+.brand-logo {
+  flex: 0 0 auto;
+  fill: currentColor;
+  margin-right: 0.15rem;
 }
 
 .brand-main {
@@ -53,6 +59,12 @@
 .search-dropdown-wrapper {
   margin-left: auto;
   position: relative;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .dropdown-button {
@@ -153,6 +165,10 @@
 
   .search-dropdown-wrapper {
     margin-left: 0;
+  }
+
+  .header-actions {
+    gap: 0.75rem;
   }
 
   .brand-main {

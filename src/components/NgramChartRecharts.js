@@ -9,6 +9,16 @@ const AUTO_PERCENT_THRESHOLD = 0.01;
 const PERCENT_SCALING = 100;
 const PPM_SCALING = 1000000;
 const TRACKER_ALPHA = 0.65;
+const TRACKER_HOVER_RADIUS = 6;
+const TRACKER_HIT_RADIUS = 10;
+const DASH_PATTERNS = [
+    [],
+    [6, 3],
+    [2, 2],
+    [10, 3],
+    [8, 2, 2, 2]
+];
+const POINT_STYLES = ['circle', 'rectRot', 'triangle', 'rect', 'cross'];
 const formatNumberNoGrouping = (value, maxDecimals = 6) => (
     new Intl.NumberFormat('no-NO', {
         useGrouping: false,
@@ -66,6 +76,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
 }, corpus: corpusType }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
+    const zoomWindowRef = useRef(null);
     const lastZoomOrPanAtRef = useRef(0);
     const [isZoomed, setIsZoomed] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
@@ -158,6 +169,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const resetZoom = () => {
         if (chartInstance.current) {
             chartInstance.current.resetZoom();
+            zoomWindowRef.current = null;
             setIsZoomed(false);
         }
     };
@@ -181,12 +193,18 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                 : Number.parseInt(requestedScaling, 10) || PERCENT_SCALING);
         const scalingFactor = effectiveScaling / 100;
         const relativeUnitLabel = effectiveScaling === PPM_SCALING ? 'ppm' : '%';
+        const lineAlpha = Math.max(0.05, Math.min(1, 1 - (settings.lineTransparency ?? 0)));
 
 
         // Transform data for Chart.js
         const labels = data.dates;
         const datasets = data.series.map((series, index) => {
             let values = [...series.data];
+            const baseColor = settings?.curvePattern ? '#000000' : colors[index % colors.length];
+            const patternIndex = index % DASH_PATTERNS.length;
+            const variantCycle = Math.floor(index / DASH_PATTERNS.length);
+            const withMarker = settings?.curvePattern && variantCycle > 0;
+            const markerStyle = POINT_STYLES[(variantCycle - 1) % POINT_STYLES.length] || 'circle';
             
             // Apply smoothing if enabled
             if (settings.smoothing > 0) {
@@ -238,16 +256,21 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
             return {
                 label: series.name,
                 data: values,
-                borderColor: colors[index % colors.length],      // Bruk valgt palett
-                backgroundColor: colors[index % colors.length],  // Bruk valgt palett
+                borderColor: withAlpha(baseColor, lineAlpha),
+                backgroundColor: settings?.curvePattern ? 'rgba(0,0,0,0)' : baseColor,
                 borderWidth: settings?.lineThickness || 2,
-                pointRadius: 0,
-                pointHoverRadius: 10,
-                pointHitRadius: 16,
-                pointStyle: 'circle',
+                pointRadius: withMarker ? 2 : 0,
+                pointHoverRadius: TRACKER_HOVER_RADIUS,
+                pointHitRadius: TRACKER_HIT_RADIUS,
+                pointStyle: withMarker
+                    ? markerStyle
+                    : 'circle',
                 tension: 0.4,
                 showLine: true,
-                pointBackgroundColor: withAlpha(colors[index % colors.length]),
+                borderDash: settings?.curvePattern
+                    ? DASH_PATTERNS[patternIndex]
+                    : [],
+                pointBackgroundColor: withAlpha(baseColor, Math.min(0.55, lineAlpha)),
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2
             };
@@ -257,11 +280,23 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
 
         // Destroy existing chart if it exists
         if (chartInstance.current) {
+            const existingMin = Number(chartInstance.current.scales?.x?.min);
+            const existingMax = Number(chartInstance.current.scales?.x?.max);
+            if (Number.isFinite(existingMin) && Number.isFinite(existingMax) && existingMax > existingMin) {
+                zoomWindowRef.current = { min: existingMin, max: existingMax };
+            }
             chartInstance.current.destroy();
         }
 
         const lastYear = data?.dates?.length ? data.dates[data.dates.length - 1] : MAX_YEAR;
         const chartMaxYear = Math.min(settings.zoomEnd, lastYear);
+        const savedZoom = zoomWindowRef.current;
+        const initialXMin = savedZoom
+            ? Math.max(settings.zoomStart, Math.floor(savedZoom.min))
+            : settings.zoomStart;
+        const initialXMax = savedZoom
+            ? Math.min(chartMaxYear, Math.ceil(savedZoom.max))
+            : chartMaxYear;
 
         // Create new chart
         chartInstance.current = new Chart(ctx, {
@@ -286,6 +321,13 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                             modifierKey: 'ctrl',
                             onPan: () => {
                                 lastZoomOrPanAtRef.current = Date.now();
+                                if (chartInstance.current?.scales?.x) {
+                                    const min = Number(chartInstance.current.scales.x.min);
+                                    const max = Number(chartInstance.current.scales.x.max);
+                                    if (Number.isFinite(min) && Number.isFinite(max) && max > min) {
+                                        zoomWindowRef.current = { min, max };
+                                    }
+                                }
                                 setIsZoomed((prev) => (prev ? prev : true));
                             }
                         },
@@ -304,12 +346,24 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                                 borderWidth: 1
                             },
                             mode: 'x',
-                            onZoom: () => {
+                            onZoom: ({ chart }) => {
                                 lastZoomOrPanAtRef.current = Date.now();
+                                const min = Number(chart?.scales?.x?.min);
+                                const max = Number(chart?.scales?.x?.max);
+                                if (Number.isFinite(min) && Number.isFinite(max) && max > min) {
+                                    zoomWindowRef.current = { min, max };
+                                }
                                 setIsZoomed((prev) => (prev ? prev : true));
                             },
                             onZoomComplete: () => {
                                 lastZoomOrPanAtRef.current = Date.now();
+                                if (chartInstance.current?.scales?.x) {
+                                    const min = Number(chartInstance.current.scales.x.min);
+                                    const max = Number(chartInstance.current.scales.x.max);
+                                    if (Number.isFinite(min) && Number.isFinite(max) && max > min) {
+                                        zoomWindowRef.current = { min, max };
+                                    }
+                                }
                             }
                         },
                         limits: {
@@ -324,9 +378,9 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                         position: isNarrow ? 'bottom' : 'right',
                         align: 'start',
                         labels: {
-                            boxWidth: 12,
+                            boxWidth: settings?.curvePattern ? 20 : 12,
                             padding: 15,
-                            usePointStyle: true,
+                            usePointStyle: !settings?.curvePattern,
                             pointStyle: 'circle',
                             font: {
                                 size: 12
@@ -374,8 +428,8 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                     x: {
                         type: 'linear',
                         position: 'bottom',
-                        min: settings.zoomStart,
-                        max: chartMaxYear,
+                        min: initialXMin,
+                        max: initialXMax,
                         ticks: {
                             callback: function(value) {
                                 return String(Math.round(value));
@@ -408,7 +462,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                 chartInstance.current.destroy();
             }
         };
-    }, [data, graphType, settings.smoothing, settings.lineThickness, settings.lineTransparency, isNarrow, settings.zoomStart, settings.zoomEnd, settings.scaling, colors, handleChartClick]);
+    }, [data, graphType, settings.smoothing, settings.lineThickness, settings.lineTransparency, settings.curvePattern, isNarrow, settings.zoomStart, settings.zoomEnd, settings.scaling, colors, handleChartClick]);
 
     return (
         <div className="d-flex flex-column flex-lg-row gap-3">
@@ -434,29 +488,37 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                         </Button>
                     )}
                 </div>
-                <div className="text-center mt-2">
-                    <small className="text-muted">
-                        Klikk og dra for å zoome inn. Klikk{' '}
-                        <button
-                            type="button"
-                            onClick={resetZoom}
-                            disabled={!isZoomed}
-                            style={{
-                                border: 'none',
-                                background: 'none',
-                                padding: 0,
-                                margin: 0,
-                                color: isZoomed ? 'inherit' : '#9aa0a6',
-                                textDecoration: 'underline',
-                                cursor: isZoomed ? 'pointer' : 'default'
-                            }}
-                            aria-label="Ga tilbake eller zoome ut"
-                        >
-                            her <FaUndo style={{ marginTop: '-2px' }} />
-                        </button>{' '}
-                        for å gå tilbake eller zoome ut.
-                    </small>
-                </div>
+                {!isZoomed && (
+                    <div className="text-center mt-2">
+                        <small className="text-muted">
+                            Klikk og dra for å zoome.
+                        </small>
+                    </div>
+                )}
+                {isZoomed && (
+                    <div className="text-center mt-2">
+                        <small className="text-muted">
+                            Zoom aktiv. Klikk{' '}
+                            <button
+                                type="button"
+                                onClick={resetZoom}
+                                style={{
+                                    border: 'none',
+                                    background: 'none',
+                                    padding: 0,
+                                    margin: 0,
+                                    color: 'inherit',
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer'
+                                }}
+                                aria-label="Ga tilbake eller zoome ut"
+                            >
+                                her <FaUndo style={{ marginTop: '-2px' }} />
+                            </button>{' '}
+                            for å zoome ut.
+                        </small>
+                    </div>
+                )}
             </div>
             <div className="d-flex flex-column justify-content-center">
                 <div className="chart-legend"></div>
