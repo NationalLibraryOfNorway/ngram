@@ -574,21 +574,23 @@ const handleHiResDownloadJPG = () => {
                         <div> 
                             <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Grafinnstillinger</strong>
                             <div style={{ paddingLeft: '1em' }}>
-                                <div>
-                                    <Form.Label>Utjevning av kurve: {smoothing} år</Form.Label>
-                                    <Form.Range
-                                        min={0}
-                                        max={20}
-                                        value={smoothing}
-                                        onChange={(e) => {
-                                            const newValue = parseInt(e.target.value);
-                                            setSmoothing(newValue);
-                                            emitSettings({ smoothing: newValue });
-                                        }}
-                                    />
+                                <div style={{ marginTop: '0.45rem' }}>
+                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Utjevning av kurve: {smoothing} år</Form.Label>
+                                    <div style={{ paddingLeft: '1.1em' }}>
+                                        <Form.Range
+                                            min={0}
+                                            max={20}
+                                            value={smoothing}
+                                            onChange={(e) => {
+                                                const newValue = parseInt(e.target.value);
+                                                setSmoothing(newValue);
+                                                emitSettings({ smoothing: newValue });
+                                            }}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <Form.Label>Fargepalett</Form.Label>
+                                <div style={{ marginTop: '0.45rem' }}>
+                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Fargepalett</Form.Label>
                                     <Form.Select
                                         value={palette}
                                         onChange={e => {
@@ -602,21 +604,23 @@ const handleHiResDownloadJPG = () => {
                                         ))}
                                     </Form.Select>
                                 </div>
-                                <div>
-                                    <Form.Label>Linjetykkelse: {lineThickness}px</Form.Label>
-                                    <Form.Range
-                                        min={1}
-                                        max={10}
-                                        value={lineThickness}
-                                        onChange={(e) => {
-                                            const newValue = parseInt(e.target.value);
-                                            setLineThickness(newValue);
-                                            emitSettings({ lineThickness: newValue });
-                                        }}
-                                    />
+                                <div style={{ marginTop: '0.45rem' }}>
+                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Linjetykkelse: {lineThickness}px</Form.Label>
+                                    <div style={{ paddingLeft: '1.1em' }}>
+                                        <Form.Range
+                                            min={1}
+                                            max={10}
+                                            value={lineThickness}
+                                            onChange={(e) => {
+                                                const newValue = parseInt(e.target.value);
+                                                setLineThickness(newValue);
+                                                emitSettings({ lineThickness: newValue });
+                                            }}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="d-flex align-items-center justify-content-between mt-2">
-                                    <Form.Label className="mb-0">Kurvemønster</Form.Label>
+                                <div className="d-flex align-items-center justify-content-between" style={{ marginTop: '0.55rem' }}>
+                                    <Form.Label className="mb-0"><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Kurvemønster</Form.Label>
                                     <Form.Check
                                         type="switch"
                                         id="curve-pattern-switch"
@@ -629,18 +633,20 @@ const handleHiResDownloadJPG = () => {
                                     />
                                 </div>
                             
-                                <div>
-                                    <Form.Label>Transparens: {Math.round(lineTransparency * 100)}%</Form.Label>
-                                    <Form.Range
-                                        min={0}
-                                        max={100}
-                                        value={lineTransparency * 100}
-                                        onChange={(e) => {
-                                            const newValue = parseInt(e.target.value) / 100;
-                                            setLineTransparency(newValue);
-                                            emitSettings({ lineTransparency: newValue });
-                                        }}
-                                    />
+                                <div style={{ marginTop: '0.55rem' }}>
+                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Transparens: {Math.round(lineTransparency * 100)}%</Form.Label>
+                                    <div style={{ paddingLeft: '1.1em' }}>
+                                        <Form.Range
+                                            min={0}
+                                            max={100}
+                                            value={lineTransparency * 100}
+                                            onChange={(e) => {
+                                                const newValue = parseInt(e.target.value) / 100;
+                                                setLineTransparency(newValue);
+                                                emitSettings({ lineTransparency: newValue });
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
