@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { Button, Modal } from 'react-bootstrap';
+import { Button, Form, Modal } from 'react-bootstrap';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
@@ -19,6 +19,7 @@ const DASH_PATTERNS = [
     [8, 2, 2, 2]
 ];
 const POINT_STYLES = ['circle', 'rectRot', 'triangle', 'rect', 'cross'];
+const clampYear = (value, min, max) => Math.min(max, Math.max(min, value));
 const formatNumberNoGrouping = (value, maxDecimals = 6) => (
     new Intl.NumberFormat('no-NO', {
         useGrouping: false,
@@ -73,7 +74,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     smoothing: 4,
     zoomStart: MIN_YEAR,
     zoomEnd: MAX_YEAR
-}, corpus: corpusType }) => {
+}, corpus: corpusType, onSettingsChange }) => {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
     const zoomWindowRef = useRef(null);
@@ -83,6 +84,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [selectedYear, setSelectedYear] = useState(null);
     const [selectedWord, setSelectedWord] = useState(null);
+    const [showPeriodControl, setShowPeriodControl] = useState(false);
     const palette = settings.palette || 'standard';
     const colors = useMemo(() => colorPalettes[palette] || colorPalettes.standard, [palette]);
     const [isNarrow, setIsNarrow] = useState(false);
@@ -173,6 +175,22 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
             zoomWindowRef.current = null;
             setIsZoomed(false);
         }
+    };
+
+    const handleHomeRangeStartChange = (nextValueRaw) => {
+        if (!onSettingsChange) {
+            return;
+        }
+        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), MIN_YEAR, settings.zoomEnd ?? MAX_YEAR);
+        onSettingsChange({ zoomStart: nextValue });
+    };
+
+    const handleHomeRangeEndChange = (nextValueRaw) => {
+        if (!onSettingsChange) {
+            return;
+        }
+        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), settings.zoomStart ?? MIN_YEAR, MAX_YEAR);
+        onSettingsChange({ zoomEnd: nextValue });
     };
 
     useEffect(() => {
@@ -516,6 +534,48 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                             </button>{' '}
                             for å zoome ut.
                         </small>
+                    </div>
+                )}
+                <div className="text-center mt-2">
+                    <button
+                        type="button"
+                        className="btn btn-link p-0"
+                        onClick={() => setShowPeriodControl((prev) => !prev)}
+                        aria-expanded={showPeriodControl}
+                    >
+                        {showPeriodControl ? 'Skjul periodekontroll' : 'Vis periodekontroll'}
+                    </button>
+                </div>
+                {showPeriodControl && (
+                    <div
+                        className="mt-2 p-3"
+                        style={{
+                            border: '1px solid var(--color-border-subtle)',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-bg-soft)'
+                        }}
+                    >
+                        <div className="small help-muted mb-2">
+                            Periodekontroll setter anker for start/slutt i zoom-home. Interaktiv zoom skjer innenfor dette intervallet.
+                        </div>
+                        <div className="mb-2">
+                            <Form.Label className="mb-1">Startår: {settings.zoomStart}</Form.Label>
+                            <Form.Range
+                                min={MIN_YEAR}
+                                max={settings.zoomEnd ?? MAX_YEAR}
+                                value={settings.zoomStart ?? MIN_YEAR}
+                                onChange={(e) => handleHomeRangeStartChange(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Form.Label className="mb-1">Sluttår: {settings.zoomEnd}</Form.Label>
+                            <Form.Range
+                                min={settings.zoomStart ?? MIN_YEAR}
+                                max={MAX_YEAR}
+                                value={settings.zoomEnd ?? MAX_YEAR}
+                                onChange={(e) => handleHomeRangeEndChange(e.target.value)}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

@@ -1,35 +1,34 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--color-bg-canvas);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: var(--font-mono);
 }
 
 .btn-primary {
-  background-color: #4a6fa5 !important;
-  border-color: #4a6fa5 !important;
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
 }
 
 .btn-primary:hover {
-  background-color: #3a5a8c !important;
-  border-color: #3a5a8c !important;
+  background-color: var(--color-accent-hover) !important;
+  border-color: var(--color-accent-hover) !important;
 }
 
 .btn-outline-primary {
-  color: #4a6fa5 !important;
-  border-color: #4a6fa5 !important;
+  color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
 }
 
 .btn-outline-primary:hover {
-  background-color: #4a6fa5 !important;
-  border-color: #4a6fa5 !important;
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
 }
 
 .btn-outline-secondary {
@@ -37,9 +36,9 @@ code {
 }
 
 .btn-outline-secondary:hover {
-  background-color: rgba(108, 117, 125, 0.25) !important;
-  border-color: #ced4da !important;
-  color: #212529 !important;
+  background-color: var(--color-accent-soft) !important;
+  border-color: var(--color-border-subtle) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .dropdown-toggle.btn-outline-secondary:hover {
@@ -48,14 +47,14 @@ code {
 
 .btn-outline-secondary:focus {
   box-shadow: none !important;
-  border-color: #ced4da !important;
-  color: #212529 !important;
+  border-color: var(--color-border-subtle) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .btn-outline-secondary:active {
-  background-color: rgba(108, 117, 125, 0.25) !important;
-  border-color: #ced4da !important;
-  color: #212529 !important;
+  background-color: var(--color-accent-soft) !important;
+  border-color: var(--color-border-subtle) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .search-controls {
@@ -100,31 +99,31 @@ code {
 
 /* Make input group appear as one unified field */
 .input-group .form-control {
-  border: 1px solid #ced4da !important;
+  border: 1px solid var(--color-border-subtle) !important;
   border-right: none !important;
 }
 
 .input-group .btn-outline-secondary {
-  border: 1px solid #ced4da !important;
+  border: 1px solid var(--color-border-subtle) !important;
   border-left: none !important;
   border-right: none !important;
 }
 
 .input-group .btn-primary {
-  border: 1px solid #ced4da !important;
+  border: 1px solid var(--color-border-subtle) !important;
   border-left: none !important;
 }
 
 .input-group .form-control:focus,
 .input-group .btn:focus {
   box-shadow: none !important;
-  border-color: #ced4da !important;
+  border-color: var(--color-border-subtle) !important;
 }
 
 /* Remove border from dropdown menu */
 .dropdown-menu {
-  border: 1px solid #ced4da !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  box-shadow: 0 2px 6px rgba(31, 15, 36, 0.12) !important;
 }
 
 /* Remove border from dropdown items */
@@ -133,5 +132,5 @@ code {
 }
 
 .dropdown-item:hover {
-  background-color: #f8f9fa !important;
+  background-color: var(--color-accent-soft) !important;
 } 

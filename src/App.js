@@ -3,7 +3,7 @@ import { Container } from 'react-bootstrap';
 import SearchControls from './components/SearchControls';
 import NgramChartRecharts from './components/NgramChartRecharts';
 import AppHeader from './components/AppHeader';
-import { fetchNgramData } from './services/ngramProcessor';
+import { fetchNgramData, MIN_YEAR, MAX_YEAR } from './services/ngramProcessor';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -15,7 +15,9 @@ function App() {
         capitalization: false,
         smoothing: 4,
         scaling: 'auto',
-        curvePattern: false
+        curvePattern: false,
+        zoomStart: MIN_YEAR,
+        zoomEnd: MAX_YEAR
     });
     const [corpus, setCorpus] = useState('');
     const [lastQuery, setLastQuery] = useState({
@@ -73,8 +75,9 @@ function App() {
                     <SearchControls 
                         onSearch={handleSearch}
                         onGraphTypeChange={setGraphType}
-                    data={data}
-                    onSettingsChange={handleSettingsChange}
+                        data={data}
+                        settings={settings}
+                        onSettingsChange={handleSettingsChange}
                     />
             </div>
                     
@@ -85,6 +88,7 @@ function App() {
                     graphType={graphType}
                     settings={settings}
                     corpus={corpus}
+                    onSettingsChange={handleSettingsChange}
                 />}
                 </div>
             </Container>

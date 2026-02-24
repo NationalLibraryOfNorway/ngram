@@ -1,17 +1,39 @@
 .App {
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: var(--color-bg-canvas);
 }
 
 :root {
+  --font-title: "ITC Clearface Std", "Iowan Old Style", "Times New Roman", serif;
+  --font-body: "STK Bureau Sans", "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "STK Gerhard", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --color-plum-900: #1f0f24;
+  --color-plum-800: #32173a;
+  --color-plum-700: #4d2857;
+  --color-plum-100: #f3edf7;
+  --color-peach-200: #f3d9c9;
+  --color-peach-100: #f9ede6;
+
+  /* Standard, lys modus: rolig base med merkevareaksenter */
+  --color-bg-canvas: #f8f6f8;
+  --color-bg-surface: #ffffff;
+  --color-bg-soft: #f6f3f6;
+  --color-border-subtle: #e5dde8;
+  --color-text-primary: #1f1a22;
+  --color-text-secondary: #5d5561;
+  --color-accent: var(--color-plum-700);
+  --color-accent-hover: var(--color-plum-800);
+  --color-accent-soft: var(--color-peach-100);
+
   --app-max-width: 1400px;
   --app-gutter: 1.5rem;
 }
 
 .header {
-  background: #ffffff;
-  border-bottom: 1px solid #e9ecef;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  box-shadow: 0 2px 10px rgba(31, 15, 36, 0.08);
   margin-bottom: 0.75rem;
 }
 
@@ -36,7 +58,7 @@
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  color: #111111;
+  color: var(--color-text-primary);
   white-space: nowrap;
 }
 
@@ -47,13 +69,16 @@
 }
 
 .brand-main {
+  font-family: var(--font-body);
   font-size: 1.15rem;
   font-weight: 600;
 }
 
 .brand-sub {
+  font-family: var(--font-mono);
   font-size: 1.05rem;
-  color: #555;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
 }
 
 .search-dropdown-wrapper {
@@ -69,7 +94,7 @@
 
 .dropdown-button {
   background: transparent;
-  color: #4f4f4f;
+  color: var(--color-text-secondary);
   border-radius: 0;
   padding: 0.2rem 0;
   font-size: 0.95rem;
@@ -79,7 +104,7 @@
 }
 
 .dropdown-button:hover {
-  color: #1f1f1f;
+  color: var(--color-accent);
   text-decoration: underline;
 }
 
@@ -95,10 +120,10 @@
   right: 0;
   top: calc(100% + 0.25rem);
   min-width: 230px;
-  background: #ffffff;
-  border: 1px solid #dcdcdc;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 4px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 20px rgba(31, 15, 36, 0.12);
   z-index: 1100;
   display: flex;
   flex-direction: column;
@@ -110,7 +135,7 @@
   text-align: left;
   width: 100%;
   padding: 0.5rem 0.6rem;
-  color: #212529;
+  color: var(--color-text-primary);
   text-decoration: none;
   background: transparent;
   border: none;
@@ -118,7 +143,7 @@
 }
 
 .sharing-link:hover {
-  background: #f8f9fa;
+  background: var(--color-accent-soft);
 }
 
 .sharing-link:disabled {
@@ -126,7 +151,7 @@
 }
 
 .copy-status {
-  color: #0a7a0a;
+  color: var(--color-accent);
   font-size: 0.85rem;
   padding: 0.2rem 0.6rem 0.45rem;
 }
@@ -150,12 +175,29 @@
 }
 
 .chart-container {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 1px 3px rgba(31, 15, 36, 0.08);
   padding: 1rem;
   height: calc(100vh - 200px);
   min-height: 400px;
+}
+
+.help-section-title {
+  font-size: 1.2em;
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.help-section-body {
+  padding-left: 1em;
+  color: var(--color-text-secondary);
+}
+
+.help-muted {
+  color: var(--color-text-secondary) !important;
 }
 
 @media (max-width: 768px) {

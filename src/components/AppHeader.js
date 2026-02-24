@@ -7,7 +7,10 @@ const AppHeader = ({ data, query, settings }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [copyStatus, setCopyStatus] = useState('');
+    const [isHoverDropdownEnabled, setIsHoverDropdownEnabled] = useState(false);
     const dropdownRef = useRef(null);
+    const hoverOpenTimeoutRef = useRef(null);
+    const hoverCloseTimeoutRef = useRef(null);
 
     const shareUrl = useMemo(() => {
         const params = new URLSearchParams({
@@ -68,6 +71,31 @@ const AppHeader = ({ data, query, settings }) => {
     };
 
     useEffect(() => {
+        const clearHoverTimers = () => {
+            if (hoverOpenTimeoutRef.current) {
+                clearTimeout(hoverOpenTimeoutRef.current);
+                hoverOpenTimeoutRef.current = null;
+            }
+            if (hoverCloseTimeoutRef.current) {
+                clearTimeout(hoverCloseTimeoutRef.current);
+                hoverCloseTimeoutRef.current = null;
+            }
+        };
+
+        const mediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const syncHoverCapability = () => {
+            setIsHoverDropdownEnabled(mediaQuery.matches);
+        };
+        syncHoverCapability();
+        mediaQuery.addEventListener('change', syncHoverCapability);
+
+        return () => {
+            clearHoverTimers();
+            mediaQuery.removeEventListener('change', syncHoverCapability);
+        };
+    }, []);
+
+    useEffect(() => {
         if (!isOpen) {
             return;
         }
@@ -94,6 +122,47 @@ const AppHeader = ({ data, query, settings }) => {
             document.removeEventListener('keydown', onEscape);
         };
     }, [isOpen]);
+
+    const clearHoverTimers = () => {
+        if (hoverOpenTimeoutRef.current) {
+            clearTimeout(hoverOpenTimeoutRef.current);
+            hoverOpenTimeoutRef.current = null;
+        }
+        if (hoverCloseTimeoutRef.current) {
+            clearTimeout(hoverCloseTimeoutRef.current);
+            hoverCloseTimeoutRef.current = null;
+        }
+    };
+
+    const handleShareMouseEnter = () => {
+        if (!isHoverDropdownEnabled) {
+            return;
+        }
+        if (hoverCloseTimeoutRef.current) {
+            clearTimeout(hoverCloseTimeoutRef.current);
+            hoverCloseTimeoutRef.current = null;
+        }
+        if (!isOpen) {
+            hoverOpenTimeoutRef.current = setTimeout(() => {
+                setIsOpen(true);
+                hoverOpenTimeoutRef.current = null;
+            }, 150);
+        }
+    };
+
+    const handleShareMouseLeave = () => {
+        if (!isHoverDropdownEnabled) {
+            return;
+        }
+        if (hoverOpenTimeoutRef.current) {
+            clearTimeout(hoverOpenTimeoutRef.current);
+            hoverOpenTimeoutRef.current = null;
+        }
+        hoverCloseTimeoutRef.current = setTimeout(() => {
+            setIsOpen(false);
+            hoverCloseTimeoutRef.current = null;
+        }, 220);
+    };
 
     return (
         <header className="header">
@@ -130,11 +199,19 @@ const AppHeader = ({ data, query, settings }) => {
                         >
                             Om N-gram
                         </button>
-                        <div className="dropdown" ref={dropdownRef}>
+                        <div
+                            className="dropdown"
+                            ref={dropdownRef}
+                            onMouseEnter={handleShareMouseEnter}
+                            onMouseLeave={handleShareMouseLeave}
+                        >
                             <button
                                 type="button"
                                 className="custom-button no-border dropdown-button"
-                                onClick={() => setIsOpen((prev) => !prev)}
+                                onClick={() => {
+                                    clearHoverTimers();
+                                    setIsOpen((prev) => !prev);
+                                }}
                             >
                                 Delingsalternativer
                             </button>
@@ -164,39 +241,39 @@ const AppHeader = ({ data, query, settings }) => {
                     <p>N-gram viser hvordan ordbruk utvikler seg over tid i Nasjonalbibliotekets materialer.</p>
 
                     <div style={{ marginBottom: '0.75rem' }}>
-                        <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Søk-innstillinger</strong>
-                        <div style={{ paddingLeft: '1em' }}>
+                        <strong className="help-section-title">Søk-innstillinger</strong>
+                        <div className="help-section-body">
                             Skriv inn ett eller flere ord (komma-separert), velg korpus, språk og grafmodus.
                             Feltet viser "demokrati" som forslag ved oppstart.
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '0.75rem' }}>
-                        <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Periodevelger (zoom-home)</strong>
-                        <div style={{ paddingLeft: '1em' }}>
+                        <strong className="help-section-title">Periodevelger (zoom-home)</strong>
+                        <div className="help-section-body">
                             Start- og sluttår definerer standardvisning og hva som brukes når du resetter zoom.
                             Zoom inn ved å klikke og dra i grafen.
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '0.75rem' }}>
-                        <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Grafinnstillinger</strong>
-                        <div style={{ paddingLeft: '1em' }}>
+                        <strong className="help-section-title">Grafinnstillinger</strong>
+                        <div className="help-section-body">
                             Juster utjevning, fargepalett, linjetykkelse, transparens og eventuelt kurvemønstre.
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '0.75rem' }}>
-                        <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Akse og skala</strong>
-                        <div style={{ paddingLeft: '1em' }}>
+                        <strong className="help-section-title">Akse og skala</strong>
+                        <div className="help-section-body">
                             Relativ visning bruker automatisk <code>%</code> eller <code>ppm</code> basert på datanivå.
                             <code> ppm</code> betyr <em>parts per million</em>, altså forekomster per 1 000 000 ord.
                         </div>
                     </div>
 
                     <div>
-                        <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Delingsalternativer</strong>
-                        <div style={{ paddingLeft: '1em' }}>
+                        <strong className="help-section-title">Delingsalternativer</strong>
+                        <div className="help-section-body">
                             Last ned dataramme (Excel), lagre grafikk som PNG eller kopier delbar lenke.
                             Høyoppløselige figurer for publikasjon finnes under nedlastingsknappen i verktøyene.
                         </div>

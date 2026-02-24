@@ -20,7 +20,7 @@ const sanitizeZoomRange = (startCandidate, endCandidate) => {
     return { start: clampedEnd, end: clampedStart };
 };
 
-const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange }) => {
+const SearchControls = ({ onSearch, onGraphTypeChange, data, settings, onSettingsChange }) => {
     const legacyState = useMemo(() => parseLegacyHash(window.location.hash), []);
     const initialZoomRange = useMemo(
         () => sanitizeZoomRange(legacyState.zoomStart, legacyState.zoomEnd),
@@ -51,6 +51,16 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
     const [scaling, setScaling] = useState(legacyState.scaling || 'auto');
     const [zoomStart, setZoomStart] = useState(initialZoomRange.start);
     const [zoomEnd, setZoomEnd] = useState(initialZoomRange.end);
+
+    useEffect(() => {
+        const syncedRange = sanitizeZoomRange(settings?.zoomStart, settings?.zoomEnd);
+        if (syncedRange.start !== zoomStart) {
+            setZoomStart(syncedRange.start);
+        }
+        if (syncedRange.end !== zoomEnd) {
+            setZoomEnd(syncedRange.end);
+        }
+    }, [settings?.zoomStart, settings?.zoomEnd, zoomStart, zoomEnd]);
 
     const emitSettings = useCallback((overrides = {}) => {
         onSettingsChange?.({
@@ -540,7 +550,7 @@ const handleHiResDownloadJPG = () => {
                             Last ned som Excel
                         </Button>
                     </div>
-                    <div className="mt-3 text-muted" style={{fontSize: '0.95em'}}>
+                    <div className="mt-3 text-muted help-muted" style={{fontSize: '0.95em'}}>
                         Bildene egner seg for bruk i publikasjoner og tidsskrifter.
                     </div>
                 </Modal.Body>
@@ -552,45 +562,8 @@ const handleHiResDownloadJPG = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <div className="d-grid gap-3">
-                        <div>
-                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>
-                                Periodevelger (zoom-home)
-                            </strong>
-                            <div className="text-muted" style={{ fontSize: '0.95em', paddingLeft: '1em' }}>
-                                Definerer start og slutt for standardvisning og reset av zoom.
-                            </div>
-                            <div style={{ paddingLeft: '1em' }}>
-                                <div>
-                                    <Form.Label>Zoom startår: {zoomStart}</Form.Label>
-                                    <Form.Range
-                                        min={MIN_YEAR}
-                                        max={zoomEnd}
-                                        value={zoomStart}
-                                        onChange={(e) => {
-                                            const newValue = clampYear(parseInt(e.target.value, 10), MIN_YEAR, zoomEnd);
-                                            setZoomStart(newValue);
-                                            emitSettings({ zoomStart: newValue });
-                                        }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <Form.Label>Zoom sluttår: {zoomEnd}</Form.Label>
-                                    <Form.Range
-                                        min={zoomStart}
-                                        max={MAX_YEAR}
-                                        value={zoomEnd}
-                                        onChange={(e) => {
-                                            const newValue = clampYear(parseInt(e.target.value, 10), zoomStart, MAX_YEAR);
-                                            setZoomEnd(newValue);
-                                            emitSettings({ zoomEnd: newValue });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
                         <div> 
-                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Grafinnstillinger</strong>
+                            <strong className="help-section-title">Grafinnstillinger</strong>
                             <div style={{ paddingLeft: '1em' }}>
                                 <div style={{ marginTop: '0.45rem' }}>
                                     <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Utjevning av kurve: {smoothing} år</Form.Label>
@@ -669,7 +642,7 @@ const handleHiResDownloadJPG = () => {
                             </div>
                         </div>
                         <div>
-                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Akse og skala</strong>
+                            <strong className="help-section-title">Akse og skala</strong>
                             <div style={{ paddingLeft: '1em' }}>
                                 <div>
                                     <Form.Label>Skalering av y-aksen</Form.Label>
@@ -686,13 +659,13 @@ const handleHiResDownloadJPG = () => {
                                         <option value="1000000">PPM</option>
                                     </Form.Select>
                                 </div>
-                                <div className="text-muted" style={{ fontSize: '0.9em', marginTop: '0.4rem' }}>
+                                <div className="text-muted help-muted" style={{ fontSize: '0.9em', marginTop: '0.4rem' }}>
                                     Auto velger prosent eller ppm basert på datanivå.
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <strong style={{ fontSize: '1.2em', color: 'rgba(190, 111, 20, 0.77)' }}>Søk-innstillinger</strong>
+                            <strong className="help-section-title">Søk-innstillinger</strong>
                             <div style={{ paddingLeft: '1em' }}>
                                 <div className="d-flex align-items-center justify-content-between">
                                     <Form.Label className="mb-0">Skill mellom stor og liten forbokstav</Form.Label>
