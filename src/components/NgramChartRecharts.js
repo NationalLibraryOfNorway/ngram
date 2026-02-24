@@ -20,6 +20,14 @@ const DASH_PATTERNS = [
 ];
 const POINT_STYLES = ['circle', 'rectRot', 'triangle', 'rect', 'cross'];
 const clampYear = (value, min, max) => Math.min(max, Math.max(min, value));
+const sanitizeRange = (startCandidate, endCandidate, min, max) => {
+    const clampedStart = clampYear(startCandidate, min, max);
+    const clampedEnd = clampYear(endCandidate, min, max);
+    if (clampedStart <= clampedEnd) {
+        return { start: clampedStart, end: clampedEnd };
+    }
+    return { start: clampedEnd, end: clampedStart };
+};
 const formatNumberNoGrouping = (value, maxDecimals = 6) => (
     new Intl.NumberFormat('no-NO', {
         useGrouping: false,
@@ -78,6 +86,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
     const zoomWindowRef = useRef(null);
+    const suppressZoomWindowSyncRef = useRef(false);
     const previousHomeRangeRef = useRef({ zoomStart: settings.zoomStart, zoomEnd: settings.zoomEnd });
     const lastZoomOrPanAtRef = useRef(0);
     const [isZoomed, setIsZoomed] = useState(false);
@@ -85,6 +94,17 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const [selectedYear, setSelectedYear] = useState(null);
     const [selectedWord, setSelectedWord] = useState(null);
     const [showPeriodControl, setShowPeriodControl] = useState(false);
+    const dataMinYear = useMemo(() => (
+        data?.dates?.length ? Number(data.dates[0]) : MIN_YEAR
+    ), [data]);
+    const dataMaxYear = useMemo(() => (
+        data?.dates?.length ? Number(data.dates[data.dates.length - 1]) : MAX_YEAR
+    ), [data]);
+    const homeRange = useMemo(() => {
+        const fallbackStart = Number.isFinite(settings.zoomStart) ? settings.zoomStart : dataMinYear;
+        const fallbackEnd = Number.isFinite(settings.zoomEnd) ? settings.zoomEnd : dataMaxYear;
+        return sanitizeRange(fallbackStart, fallbackEnd, dataMinYear, dataMaxYear);
+    }, [settings.zoomStart, settings.zoomEnd, dataMinYear, dataMaxYear]);
     const palette = settings.palette || 'standard';
     const colors = useMemo(() => colorPalettes[palette] || colorPalettes.standard, [palette]);
     const [isNarrow, setIsNarrow] = useState(false);
@@ -181,7 +201,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         if (!onSettingsChange) {
             return;
         }
-        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), MIN_YEAR, settings.zoomEnd ?? MAX_YEAR);
+        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), dataMinYear, homeRange.end);
         onSettingsChange({ zoomStart: nextValue });
     };
 
@@ -189,7 +209,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         if (!onSettingsChange) {
             return;
         }
-        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), settings.zoomStart ?? MIN_YEAR, MAX_YEAR);
+        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), homeRange.start, dataMaxYear);
         onSettingsChange({ zoomEnd: nextValue });
     };
 
@@ -200,6 +220,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
             previous.zoomEnd !== settings.zoomEnd
         ) {
             // Home range changed: clear preserved zoom so new period applies immediately.
+            suppressZoomWindowSyncRef.current = true;
             zoomWindowRef.current = null;
             setIsZoomed(false);
             previousHomeRangeRef.current = {
@@ -314,24 +335,30 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         const ctx = chartRef.current.getContext('2d');
 
         // Destroy existing chart if it exists
+        const shouldPreserveZoomWindow = !suppressZoomWindowSyncRef.current;
         if (chartInstance.current) {
-            const existingMin = Number(chartInstance.current.scales?.x?.min);
-            const existingMax = Number(chartInstance.current.scales?.x?.max);
-            if (Number.isFinite(existingMin) && Number.isFinite(existingMax) && existingMax > existingMin) {
-                zoomWindowRef.current = { min: existingMin, max: existingMax };
+            if (shouldPreserveZoomWindow) {
+                const existingMin = Number(chartInstance.current.scales?.x?.min);
+                const existingMax = Number(chartInstance.current.scales?.x?.max);
+                if (Number.isFinite(existingMin) && Number.isFinite(existingMax) && existingMax > existingMin) {
+                    zoomWindowRef.current = { min: existingMin, max: existingMax };
+                }
+            } else {
+                zoomWindowRef.current = null;
             }
             chartInstance.current.destroy();
         }
 
-        const lastYear = data?.dates?.length ? data.dates[data.dates.length - 1] : MAX_YEAR;
-        const chartMaxYear = Math.min(settings.zoomEnd, lastYear);
-        const savedZoom = zoomWindowRef.current;
+        const savedZoom = shouldPreserveZoomWindow ? zoomWindowRef.current : null;
+        const chartMinYear = homeRange.start;
+        const chartMaxYear = homeRange.end;
         const initialXMin = savedZoom
-            ? Math.max(settings.zoomStart, Math.floor(savedZoom.min))
-            : settings.zoomStart;
+            ? Math.max(chartMinYear, Math.floor(savedZoom.min))
+            : chartMinYear;
         const initialXMax = savedZoom
             ? Math.min(chartMaxYear, Math.ceil(savedZoom.max))
             : chartMaxYear;
+        suppressZoomWindowSyncRef.current = false;
 
         // Create new chart
         chartInstance.current = new Chart(ctx, {
@@ -403,8 +430,8 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                         },
                         limits: {
                             x: {
-                                min: settings.zoomStart,
-                                max: settings.zoomEnd,
+                                min: chartMinYear,
+                                max: chartMaxYear,
                                 minRange: 5
                             }
                         }
@@ -497,7 +524,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                 chartInstance.current.destroy();
             }
         };
-    }, [data, graphType, settings.smoothing, settings.lineThickness, settings.lineTransparency, settings.curvePattern, isNarrow, settings.zoomStart, settings.zoomEnd, settings.scaling, colors, handleChartClick]);
+    }, [data, graphType, settings.smoothing, settings.lineThickness, settings.lineTransparency, settings.curvePattern, isNarrow, settings.zoomStart, settings.zoomEnd, settings.scaling, colors, handleChartClick, homeRange]);
 
     return (
         <div className="d-flex flex-column flex-lg-row gap-3">
@@ -559,20 +586,20 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                             Periodekontroll setter anker for start/slutt i zoom-home. Interaktiv zoom skjer innenfor dette intervallet.
                         </div>
                         <div className="mb-2">
-                            <Form.Label className="mb-1">Startår: {settings.zoomStart}</Form.Label>
+                            <Form.Label className="mb-1">Startår: {homeRange.start}</Form.Label>
                             <Form.Range
-                                min={MIN_YEAR}
-                                max={settings.zoomEnd ?? MAX_YEAR}
-                                value={settings.zoomStart ?? MIN_YEAR}
+                                min={dataMinYear}
+                                max={homeRange.end}
+                                value={homeRange.start}
                                 onChange={(e) => handleHomeRangeStartChange(e.target.value)}
                             />
                         </div>
                         <div>
-                            <Form.Label className="mb-1">Sluttår: {settings.zoomEnd}</Form.Label>
+                            <Form.Label className="mb-1">Sluttår: {homeRange.end}</Form.Label>
                             <Form.Range
-                                min={settings.zoomStart ?? MIN_YEAR}
-                                max={MAX_YEAR}
-                                value={settings.zoomEnd ?? MAX_YEAR}
+                                min={homeRange.start}
+                                max={dataMaxYear}
+                                value={homeRange.end}
                                 onChange={(e) => handleHomeRangeEndChange(e.target.value)}
                             />
                         </div>
