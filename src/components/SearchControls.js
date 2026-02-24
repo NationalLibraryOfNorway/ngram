@@ -6,9 +6,26 @@ import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
 import { parseLegacyHash } from '../services/legacyHash';
 
 const DEFAULT_START_TERM = 'demokrati';
+const clampYear = (value, min, max) => Math.min(max, Math.max(min, value));
+const sanitizeZoomRange = (startCandidate, endCandidate) => {
+    const fallbackStart = Number.isFinite(startCandidate) ? startCandidate : MIN_YEAR;
+    const fallbackEnd = Number.isFinite(endCandidate) ? endCandidate : MAX_YEAR;
+    const clampedStart = clampYear(fallbackStart, MIN_YEAR, MAX_YEAR);
+    const clampedEnd = clampYear(fallbackEnd, MIN_YEAR, MAX_YEAR);
+
+    if (clampedStart <= clampedEnd) {
+        return { start: clampedStart, end: clampedEnd };
+    }
+
+    return { start: clampedEnd, end: clampedStart };
+};
 
 const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange }) => {
     const legacyState = useMemo(() => parseLegacyHash(window.location.hash), []);
+    const initialZoomRange = useMemo(
+        () => sanitizeZoomRange(legacyState.zoomStart, legacyState.zoomEnd),
+        [legacyState.zoomStart, legacyState.zoomEnd]
+    );
     const initialWords = legacyState.words.length > 0 ? legacyState.words.join(', ') : '';
     const [words, setWords] = useState(initialWords);
     const [corpus, setCorpus] = useState(legacyState.corpus || 'bok');
@@ -32,8 +49,8 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
         { id: 'bw', label: 'Svart/hvitt' }
     ];
     const [scaling, setScaling] = useState(legacyState.scaling || 'auto');
-    const [zoomStart, setZoomStart] = useState(legacyState.zoomStart || MIN_YEAR);
-    const [zoomEnd, setZoomEnd] = useState(legacyState.zoomEnd || MAX_YEAR);
+    const [zoomStart, setZoomStart] = useState(initialZoomRange.start);
+    const [zoomEnd, setZoomEnd] = useState(initialZoomRange.end);
 
     const emitSettings = useCallback((overrides = {}) => {
         onSettingsChange?.({
@@ -141,6 +158,7 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
         }
 
         onGraphTypeChange(legacyState.graphType || 'relative');
+        const hydratedZoomRange = sanitizeZoomRange(legacyState.zoomStart, legacyState.zoomEnd);
         emitSettings({
             capitalization,
             smoothing,
@@ -149,8 +167,8 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, onSettingsChange })
             curvePattern,
             scaling,
             palette,
-            zoomStart: legacyState.zoomStart || MIN_YEAR,
-            zoomEnd: legacyState.zoomEnd || MAX_YEAR
+            zoomStart: hydratedZoomRange.start,
+            zoomEnd: hydratedZoomRange.end
         });
         // Intentionally run once for legacy hash hydration.
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -546,10 +564,10 @@ const handleHiResDownloadJPG = () => {
                                     <Form.Label>Zoom startår: {zoomStart}</Form.Label>
                                     <Form.Range
                                         min={MIN_YEAR}
-                                        max={MAX_YEAR}
+                                        max={zoomEnd}
                                         value={zoomStart}
                                         onChange={(e) => {
-                                            const newValue = parseInt(e.target.value);
+                                            const newValue = clampYear(parseInt(e.target.value, 10), MIN_YEAR, zoomEnd);
                                             setZoomStart(newValue);
                                             emitSettings({ zoomStart: newValue });
                                         }}
@@ -559,11 +577,11 @@ const handleHiResDownloadJPG = () => {
                                 <div>
                                     <Form.Label>Zoom sluttår: {zoomEnd}</Form.Label>
                                     <Form.Range
-                                        min={MIN_YEAR}
+                                        min={zoomStart}
                                         max={MAX_YEAR}
                                         value={zoomEnd}
                                         onChange={(e) => {
-                                            const newValue = parseInt(e.target.value);
+                                            const newValue = clampYear(parseInt(e.target.value, 10), zoomStart, MAX_YEAR);
                                             setZoomEnd(newValue);
                                             emitSettings({ zoomEnd: newValue });
                                         }}

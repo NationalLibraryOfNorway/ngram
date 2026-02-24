@@ -27,7 +27,6 @@ const LANG_BY_TOKEN_5 = {
     '6': 'sme',
     '7': 'fkv'
 };
-const CUMULATIVE_TOKEN_VALUES = new Set(['2', 'true']);
 const CASE_SENSITIVE_TOKEN_VALUES = new Set(['2', 'true']);
 const isYearRangeToken = (token) => /^\d{4},\d{4}$/.test(token);
 const toTokenMap = (tokens) => ({
@@ -108,10 +107,7 @@ export const parseLegacyHash = (hashValue) => {
         ? mapped.token4.split(',').map((word) => word.trim()).filter(Boolean)
         : [];
 
-    const baseGraphType = MODE_BY_TOKEN_2[mapped.token2] || 'relative';
-    const graphType = CUMULATIVE_TOKEN_VALUES.has((mapped.token10 || '').toLowerCase())
-        ? 'cumulative'
-        : baseGraphType;
+    const graphType = MODE_BY_TOKEN_2[mapped.token2] || 'relative';
     const corpus = CORPUS_BY_TOKEN_3[mapped.token3] || 'bok';
     const lang = corpus === 'avis' ? 'nob' : (LANG_BY_TOKEN_5[mapped.token5] || 'nob');
     const capitalization = CASE_SENSITIVE_TOKEN_VALUES.has((mapped.token6 || '').toLowerCase());
