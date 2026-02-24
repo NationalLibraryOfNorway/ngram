@@ -94,17 +94,11 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     const [selectedYear, setSelectedYear] = useState(null);
     const [selectedWord, setSelectedWord] = useState(null);
     const [showPeriodControl, setShowPeriodControl] = useState(false);
-    const dataMinYear = useMemo(() => (
-        data?.dates?.length ? Number(data.dates[0]) : MIN_YEAR
-    ), [data]);
-    const dataMaxYear = useMemo(() => (
-        data?.dates?.length ? Number(data.dates[data.dates.length - 1]) : MAX_YEAR
-    ), [data]);
     const homeRange = useMemo(() => {
-        const fallbackStart = Number.isFinite(settings.zoomStart) ? settings.zoomStart : dataMinYear;
-        const fallbackEnd = Number.isFinite(settings.zoomEnd) ? settings.zoomEnd : dataMaxYear;
-        return sanitizeRange(fallbackStart, fallbackEnd, dataMinYear, dataMaxYear);
-    }, [settings.zoomStart, settings.zoomEnd, dataMinYear, dataMaxYear]);
+        const fallbackStart = Number.isFinite(settings.zoomStart) ? settings.zoomStart : MIN_YEAR;
+        const fallbackEnd = Number.isFinite(settings.zoomEnd) ? settings.zoomEnd : MAX_YEAR;
+        return sanitizeRange(fallbackStart, fallbackEnd, MIN_YEAR, MAX_YEAR);
+    }, [settings.zoomStart, settings.zoomEnd]);
     const palette = settings.palette || 'standard';
     const colors = useMemo(() => colorPalettes[palette] || colorPalettes.standard, [palette]);
     const [isNarrow, setIsNarrow] = useState(false);
@@ -201,7 +195,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         if (!onSettingsChange) {
             return;
         }
-        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), dataMinYear, homeRange.end);
+        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), MIN_YEAR, homeRange.end);
         onSettingsChange({ zoomStart: nextValue });
     };
 
@@ -209,7 +203,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         if (!onSettingsChange) {
             return;
         }
-        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), homeRange.start, dataMaxYear);
+        const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), homeRange.start, MAX_YEAR);
         onSettingsChange({ zoomEnd: nextValue });
     };
 
@@ -588,7 +582,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                         <div className="mb-2">
                             <Form.Label className="mb-1">Startår: {homeRange.start}</Form.Label>
                             <Form.Range
-                                min={dataMinYear}
+                                min={MIN_YEAR}
                                 max={homeRange.end}
                                 value={homeRange.start}
                                 onChange={(e) => handleHomeRangeStartChange(e.target.value)}
@@ -598,7 +592,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                             <Form.Label className="mb-1">Sluttår: {homeRange.end}</Form.Label>
                             <Form.Range
                                 min={homeRange.start}
-                                max={dataMaxYear}
+                                max={MAX_YEAR}
                                 value={homeRange.end}
                                 onChange={(e) => handleHomeRangeEndChange(e.target.value)}
                             />
