@@ -644,7 +644,7 @@ const handleHiResDownloadJPG = () => {
                         <div>
                             <strong className="help-section-title">Akse og skala</strong>
                             <div style={{ paddingLeft: '1em' }}>
-                                <div>
+                                <div className="settings-option-card">
                                     <Form.Label>Skalering av y-aksen</Form.Label>
                                     <Form.Select
                                         value={scaling}
@@ -658,16 +658,16 @@ const handleHiResDownloadJPG = () => {
                                         <option value="100">Prosent (%)</option>
                                         <option value="1000000">PPM</option>
                                     </Form.Select>
-                                </div>
-                                <div className="text-muted help-muted" style={{ fontSize: '0.9em', marginTop: '0.4rem' }}>
-                                    Auto velger prosent eller ppm basert på datanivå.
+                                    <div className="text-muted help-muted" style={{ fontSize: '0.9em', marginTop: '0.4rem' }}>
+                                        Auto velger prosent eller ppm basert på datanivå.
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div>
                             <strong className="help-section-title">Søk-innstillinger</strong>
                             <div style={{ paddingLeft: '1em' }}>
-                                <div className="d-flex align-items-center justify-content-between">
+                                <div className="settings-option-card d-flex align-items-center justify-content-between">
                                     <Form.Label className="mb-0">Skill mellom stor og liten forbokstav</Form.Label>
                                     <Form.Check 
                                         type="switch"
