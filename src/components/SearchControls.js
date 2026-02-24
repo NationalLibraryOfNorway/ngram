@@ -565,8 +565,8 @@ const handleHiResDownloadJPG = () => {
                         <div> 
                             <strong className="help-section-title">Grafinnstillinger</strong>
                             <div style={{ paddingLeft: '1em' }}>
-                                <div style={{ marginTop: '0.45rem' }}>
-                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Utjevning av kurve: {smoothing} år</Form.Label>
+                                <div className="settings-option-card">
+                                    <Form.Label>Utjevning av kurve: {smoothing} år</Form.Label>
                                     <div style={{ paddingLeft: '1.1em' }}>
                                         <Form.Range
                                             min={0}
@@ -580,8 +580,8 @@ const handleHiResDownloadJPG = () => {
                                         />
                                     </div>
                                 </div>
-                                <div style={{ marginTop: '0.45rem' }}>
-                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Fargepalett</Form.Label>
+                                <div className="settings-option-card">
+                                    <Form.Label>Fargepalett</Form.Label>
                                     <Form.Select
                                         value={palette}
                                         onChange={e => {
@@ -595,8 +595,8 @@ const handleHiResDownloadJPG = () => {
                                         ))}
                                     </Form.Select>
                                 </div>
-                                <div style={{ marginTop: '0.45rem' }}>
-                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Linjetykkelse: {lineThickness}px</Form.Label>
+                                <div className="settings-option-card">
+                                    <Form.Label>Linjetykkelse: {lineThickness}px</Form.Label>
                                     <div style={{ paddingLeft: '1.1em' }}>
                                         <Form.Range
                                             min={1}
@@ -610,8 +610,8 @@ const handleHiResDownloadJPG = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="d-flex align-items-center justify-content-between" style={{ marginTop: '0.55rem' }}>
-                                    <Form.Label className="mb-0"><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Kurvemønster</Form.Label>
+                                <div className="settings-option-card d-flex align-items-center justify-content-between">
+                                    <Form.Label className="mb-0">Kurvemønster</Form.Label>
                                     <Form.Check
                                         type="switch"
                                         id="curve-pattern-switch"
@@ -623,9 +623,9 @@ const handleHiResDownloadJPG = () => {
                                         }}
                                     />
                                 </div>
-                            
-                                <div style={{ marginTop: '0.55rem' }}>
-                                    <Form.Label><span style={{ marginRight: '0.35em', color: '#8a8a8a' }}>•</span>Transparens: {Math.round(lineTransparency * 100)}%</Form.Label>
+
+                                <div className="settings-option-card">
+                                    <Form.Label>Transparens: {Math.round(lineTransparency * 100)}%</Form.Label>
                                     <div style={{ paddingLeft: '1.1em' }}>
                                         <Form.Range
                                             min={0}
