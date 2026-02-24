@@ -486,24 +486,6 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
             <div className="flex-grow-1">
                 <div style={{ minHeight: '400px', position: 'relative' }}>
                     <canvas ref={chartRef} style={{ touchAction: 'none', userSelect: 'none' }}></canvas>
-                    {isZoomed && (
-                        <Button 
-                            variant="outline-secondary" 
-                            size="sm"
-                            onClick={resetZoom}
-                            className="position-absolute"
-                            style={{ 
-                                bottom: '10px', 
-                                right: '10px',
-                                zIndex: 1,
-                                padding: '0.25rem 0.5rem',
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)'
-                            }}
-                            title="Gjenopprett hele perioden"
-                        >
-                            <FaUndo />
-                        </Button>
-                    )}
                 </div>
                 {!isZoomed && (
                     <div className="text-center mt-2">
