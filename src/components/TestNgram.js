@@ -41,7 +41,7 @@ const TestNgram = () => {
     return (
         <Card className="m-3">
             <Card.Body>
-                <Card.Title>Test ngram API</Card.Title>
+                <Card.Title>Test N-gram API</Card.Title>
                 <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
                         <Form.Label>Words</Form.Label>

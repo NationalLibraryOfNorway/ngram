@@ -65,7 +65,7 @@ const AppHeader = ({ data, query, settings }) => {
 
         const workbook = XLSX.utils.book_new();
         const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'ngram data');
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'N-gram data');
         XLSX.writeFile(workbook, `ngram_data_${new Date().toISOString().split('T')[0]}.xlsx`);
         setIsOpen(false);
     };
@@ -186,7 +186,7 @@ const AppHeader = ({ data, query, settings }) => {
                             <path d="M1.4 7.8c.6 0 1.1-.5 1.1-1.1s-.5-1-1.1-1C.8 5.7.3 6.2.3 6.8c0 .5.5 1 1.1 1zM12.2 23.7c.6 0 1.1-.5 1.1-1.1 0-.6-.5-1.1-1.1-1.1-.6 0-1.1.5-1.1 1.1 0 .7.5 1.1 1.1 1.1zM4.1.3v19.8h12.6V.3H4.1zm2.7 7.5c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1zm5.3 10.6c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1 1.1.5 1.1 1.1-.5 1.1-1.1 1.1zm0-5.3c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1 1.1.5 1.1 1.1-.5 1.1-1.1 1.1zm0-5.3c-.6 0-1.1-.5-1.1-1.1s.5-1.1 1.1-1.1 1.1.5 1.1 1.1-.5 1.1-1.1 1.1z" />
                         </svg>
                         <span className="brand-main">Nasjonalbiblioteket</span>
-                        <span className="brand-sub">ngram</span>
+                        <span className="brand-sub">N-gram</span>
                     </a>
                 </div>
 
@@ -197,7 +197,7 @@ const AppHeader = ({ data, query, settings }) => {
                             className="custom-button no-border dropdown-button"
                             onClick={() => setShowAbout(true)}
                         >
-                            Om ngram
+                            Om N-gram
                         </button>
                         <div
                             className="dropdown"
@@ -224,7 +224,7 @@ const AppHeader = ({ data, query, settings }) => {
                                         Grafikk (.png)
                                     </button>
                                     <button type="button" className="sharing-link" onClick={copyShareLink}>
-                                        Kopier lenken til ngram
+                                        Kopier lenken til N-gram
                                     </button>
                                     {copyStatus && <span className="copy-status">{copyStatus}</span>}
                                 </div>
@@ -235,10 +235,10 @@ const AppHeader = ({ data, query, settings }) => {
             </div>
             <Modal show={showAbout} onHide={() => setShowAbout(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Om ngram</Modal.Title>
+                    <Modal.Title>Om N-gram</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <p>ngram viser hvordan ordbruk utvikler seg over tid i Nasjonalbibliotekets materialer.</p>
+                    <p>N-gram viser hvordan ordbruk utvikler seg over tid i Nasjonalbibliotekets materialer.</p>
 
                     <div style={{ marginBottom: '0.75rem' }}>
                         <strong className="help-section-title">Søk-innstillinger</strong>

@@ -1,12 +1,12 @@
-# ngram App Architecture
+# N-gram App Architecture
 
 ## 1) Systemoversikt
-Frontend er en React-app (CRA) som henter ngram-data direkte fra NB API.  
+Frontend er en React-app (CRA) som henter N-gram-data direkte fra NB API.  
 Arkitekturen er klienttung: state, visualisering, deling og eksport håndteres i browser.
 
 Flyt:
 1. Bruker endrer søkeparametre.
-2. Frontend bygger query mot NB ngram API.
+2. Frontend bygger query mot NB N-gram API.
 3. API-respons normaliseres til intern datastruktur.
 4. Grafen rendres med Chart.js + zoom-plugin.
 5. Bruker kan dele (hash-lenker), eksportere (xlsx/png), eller zoome videre.
@@ -48,7 +48,7 @@ Flyt:
 ### `src/components/AppHeader.js`
 - Toppbanner med:
   - NB-brand
-  - `Om ngram`-modal
+  - `Om N-gram`-modal
   - delingsdropdown
 - Genererer delingslenker i `v2`-format.
 - Eksporterer:
@@ -96,7 +96,7 @@ Eksempel:
 `/ngram/query?terms=fred,frihet&lang=nob&case_sens=0&corpus=bok&mode=relative&smooth=1&from=1810&to=2025`
 
 ## 3.2 Inngående API-respons (forventet)
-Array av ngram-serier, typisk:
+Array av n-gramserier, typisk:
 - `key`: ord/term
 - `values`: liste med punkter per år, med felter som:
   - `x`: år

@@ -1,7 +1,7 @@
-# ngram App Manifest
+# N-gram App Manifest
 
 ## Formål
-ngram-appen skal gi en enkel, rask og forklarbar måte å utforske ordbruk over tid i Nasjonalbibliotekets materialer. Appen skal fungere for både fagbrukere og allmennheten, med lav terskel for søk og tydelig visualisering.
+N-gram-appen skal gi en enkel, rask og forklarbar måte å utforske ordbruk over tid i Nasjonalbibliotekets materialer. Appen skal fungere for både fagbrukere og allmennheten, med lav terskel for søk og tydelig visualisering.
 
 ## Kjerneverdi
 - Gjør historiske språkdata lesbare uten teknisk forkunnskap.
@@ -46,7 +46,7 @@ ngram-appen skal gi en enkel, rask og forklarbar måte å utforske ordbruk over 
 
 ## Deling og kompatibilitet
 - Appen skal støtte to lenkeformater:
-  1. Legacy hash-format fra eldre NB ngram-lenker.
+  1. Legacy hash-format fra eldre NB N-gram-lenker.
   2. Nytt `v2` hash-format kontrollert av appen.
 - Appen skal kunne kjøres under flere URL-baser (GitHub Pages og NB-produksjon).
 

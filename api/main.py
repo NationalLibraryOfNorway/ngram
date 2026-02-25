@@ -28,7 +28,7 @@ class NgramRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "ngram API is running"}
+    return {"message": "N-gram API is running"}
 
 @app.post("/api/ngram")
 async def get_ngram_data(request: NgramRequest):

@@ -1,7 +1,7 @@
-# ngram Viewer - National Library of Norway 🇳🇴 (README.no.md)
+# N-gram Viewer - National Library of Norway 🇳🇴 (README.no.md)
 
 A modern, interactive web application for exploring word frequencies in the National Library of Norway's digital collections. This tool allows users to analyze and visualize how word usage has evolved over time in both books and newspapers.
-Here is a link [ngram](https://nationallibraryofnorway.github.io/dhlab-app-nb-ngram/) to explore the viewer.
+Here is a link [N-gram](https://nationallibraryofnorway.github.io/dhlab-app-nb-ngram/) to explore the viewer.
 
 ## Features
 
@@ -37,7 +37,7 @@ Here is a link [ngram](https://nationallibraryofnorway.github.io/dhlab-app-nb-ng
 - React
 - Chart.js for visualizations
 - React-Bootstrap for UI components
-- DH-Lab API for ngram data
+- DH-Lab API for N-gram data
 
 ### Key Features Implementation
 - Year range limits (1810-2025) for data consistency
@@ -125,7 +125,7 @@ This approach demonstrates how AI tools can effectively bridge technical gaps, e
 
 ## Acknowledgments
 
-- National Library of Norway's DH-Lab for the ngram API
+- National Library of Norway's DH-Lab for the N-gram API
 - Cursor AI for assistance in codebase conversion and development
 - ChatGPT AI for pair programming support
 - The open-source community for various tools and libraries

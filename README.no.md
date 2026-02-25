@@ -1,4 +1,4 @@
-# ngram Viewer – Nasjonalbiblioteket
+# N-gram Viewer – Nasjonalbiblioteket
 
 En moderne og interaktiv webapplikasjon for utforsking av ordhyppighet i Nasjonalbibliotekets digitale samlinger. Verktøyet lar brukere analysere og visualisere hvordan ordbruk har utviklet seg over tid – både i bøker og aviser.
 

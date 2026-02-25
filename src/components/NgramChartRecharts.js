@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { Button, Form, Modal } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
@@ -207,6 +207,10 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         const nextValue = clampYear(Number.parseInt(nextValueRaw, 10), homeRange.start, MAX_YEAR);
         onSettingsChange({ zoomEnd: nextValue });
     };
+    const rangeSpan = Math.max(1, MAX_YEAR - MIN_YEAR);
+    const rangeStartPercent = ((homeRange.start - MIN_YEAR) / rangeSpan) * 100;
+    const rangeEndPercent = ((homeRange.end - MIN_YEAR) / rangeSpan) * 100;
+    const selectedRangeWidthPercent = Math.max(0, rangeEndPercent - rangeStartPercent);
 
     useEffect(() => {
         const previous = previousHomeRangeRef.current;
@@ -580,23 +584,43 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                         <div className="small help-muted mb-2">
                             Periodekontroll setter anker for start/slutt i zoom-home. Interaktiv zoom skjer innenfor dette intervallet.
                         </div>
-                        <div className="mb-2">
-                            <Form.Label className="mb-1">Startår: {homeRange.start}</Form.Label>
-                            <Form.Range
+                        <div className="period-range-labels mb-2">
+                            <span>Startår: {homeRange.start}</span>
+                            <span>Sluttår: {homeRange.end}</span>
+                        </div>
+                        <div className="period-range-slider" role="group" aria-label="Periodevalg">
+                            <div className="period-range-slider__track" />
+                            <div
+                                className="period-range-slider__selected"
+                                style={{
+                                    left: `${rangeStartPercent}%`,
+                                    width: `${selectedRangeWidthPercent}%`
+                                }}
+                            />
+                            <input
+                                type="range"
+                                className="period-range-slider__input period-range-slider__input--start"
                                 min={MIN_YEAR}
                                 max={homeRange.end}
+                                step={1}
                                 value={homeRange.start}
+                                aria-label={`Startår ${homeRange.start}`}
                                 onChange={(e) => handleHomeRangeStartChange(e.target.value)}
                             />
-                        </div>
-                        <div>
-                            <Form.Label className="mb-1">Sluttår: {homeRange.end}</Form.Label>
-                            <Form.Range
+                            <input
+                                type="range"
+                                className="period-range-slider__input period-range-slider__input--end"
                                 min={homeRange.start}
                                 max={MAX_YEAR}
+                                step={1}
                                 value={homeRange.end}
+                                aria-label={`Sluttår ${homeRange.end}`}
                                 onChange={(e) => handleHomeRangeEndChange(e.target.value)}
                             />
+                        </div>
+                        <div className="period-range-extents">
+                            <span>{MIN_YEAR}</span>
+                            <span>{MAX_YEAR}</span>
                         </div>
                     </div>
                 )}

@@ -1,10 +1,10 @@
-// Constants for ngram processing
+// Constants for N-gram processing
 const MIN_YEAR = 1810;
 const MAX_YEAR = new Date().getFullYear();
 const NGRAM_API = process.env.REACT_APP_NGRAM_API || 'https://api.nb.no/dhlab/nb_ngram/ngram/query';
 const REQUEST_TIMEOUT_MS = 30000;
 
-// Process ngram data
+// Process N-gram data
 const processNgramData = (data, mode, smooth) => {
     if (!data || !data.length) return null;
 
@@ -58,7 +58,7 @@ const processNgramData = (data, mode, smooth) => {
     return processedData;
 };
 
-// Fetch ngram data from the API
+// Fetch N-gram data from the API
 const fetchNgramData = async (words, corpus, lang, graphType = 'relative', settings = {}) => {
     try {
         const trimmedWords = (words || []).map((word) => String(word).trim()).filter(Boolean);
@@ -118,7 +118,7 @@ const fetchNgramData = async (words, corpus, lang, graphType = 'relative', setti
         try {
             ngrams = await response.json();
         } catch {
-            throw new Error('Kunne ikke lese JSON-respons fra ngram API.');
+            throw new Error('Kunne ikke lese JSON-respons fra N-gram API.');
         }
         
         // Process the raw ngram data
@@ -195,7 +195,7 @@ const fetchNgramData = async (words, corpus, lang, graphType = 'relative', setti
         if (error.name === 'AbortError') {
             throw new Error('Foresporselen tok for lang tid. Prov igjen.');
         }
-        throw new Error(error?.message || 'Klarte ikke hente ngram-data.');
+        throw new Error(error?.message || 'Klarte ikke hente N-gram-data.');
     }
 };
 

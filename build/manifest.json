@@ -1,6 +1,6 @@
 {
-  "short_name": "ngram",
-  "name": "ngram",
+  "short_name": "N-gram",
+  "name": "N-gram",
   "icons": [
     {
       "src": "favicon.ico",

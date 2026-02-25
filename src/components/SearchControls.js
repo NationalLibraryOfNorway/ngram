@@ -300,7 +300,7 @@ const handleHiResDownloadJPG = () => {
         ];
         
         // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'ngram data');
+        XLSX.utils.book_append_sheet(wb, ws, 'N-gram data');
         
         // Generate Excel file
         XLSX.writeFile(wb, `ngram_data_${new Date().toISOString().split('T')[0]}.xlsx`);
