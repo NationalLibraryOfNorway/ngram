@@ -1,7 +1,7 @@
 # N-gram Viewer - National Library of Norway 🇳🇴 (README.no.md)
 
 A modern, interactive web application for exploring word frequencies in the National Library of Norway's digital collections. This tool allows users to analyze and visualize how word usage has evolved over time in both books and newspapers.
-Here is a link [N-gram](https://nationallibraryofnorway.github.io/dhlab-app-nb-ngram/) to explore the viewer.
+Here is a link [N-gram](https://nationallibraryofnorway.github.io/ngram/) to explore the viewer.
 
 ## Features
 
@@ -73,7 +73,7 @@ npm run build
 ```
 
 ### Build Targets
-- `npm run build` builds for GitHub Pages (`/dhlab-app-nb-ngram`).
+- `npm run build` builds for GitHub Pages (`/ngram`).
 - `npm run build:nb` builds for NB production path (`/ngram`).
 
 ## Development Process and AI Assistance

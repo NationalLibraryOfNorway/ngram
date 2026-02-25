@@ -158,7 +158,7 @@ Tilgjengelighet:
 
 Scripts:
 - `npm start` -> lokal utvikling
-- `npm run build` -> GitHub Pages-basert build (`/dhlab-app-nb-ngram`)
+- `npm run build` -> GitHub Pages-basert build (`/ngram`)
 - `npm run build:nb` -> NB produksjonsbase (`/ngram`)
 - `npm run deploy` -> build + publish til `gh-pages`
 
