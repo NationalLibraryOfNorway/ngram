@@ -14,6 +14,7 @@ function App() {
     const [settings, setSettings] = useState({
         capitalization: false,
         smoothing: 4,
+        lineThickness: 3,
         scaling: 'auto',
         curvePattern: false,
         zoomStart: MIN_YEAR,

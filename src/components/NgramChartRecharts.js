@@ -80,6 +80,7 @@ const colorPalettes = {
 const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
     capitalization: false, 
     smoothing: 4,
+    lineThickness: 3,
     zoomStart: MIN_YEAR,
     zoomEnd: MAX_YEAR
 }, corpus: corpusType, onSettingsChange }) => {
@@ -308,7 +309,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                 data: values,
                 borderColor: withAlpha(baseColor, lineAlpha),
                 backgroundColor: settings?.curvePattern ? 'rgba(0,0,0,0)' : baseColor,
-                borderWidth: settings?.lineThickness || 2,
+                borderWidth: settings?.lineThickness || 3,
                 pointRadius: withMarker ? 2 : 0,
                 pointHoverRadius: TRACKER_HOVER_RADIUS,
                 pointHitRadius: TRACKER_HIT_RADIUS,

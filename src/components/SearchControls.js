@@ -39,7 +39,7 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, settings, onSetting
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [capitalization, setCapitalization] = useState(Boolean(legacyState.capitalization));
     const [smoothing, setSmoothing] = useState(legacyState.smoothing ?? 4);
-    const [lineThickness, setLineThickness] = useState(2);
+    const [lineThickness, setLineThickness] = useState(3);
     const [lineTransparency, setLineTransparency] = useState(0.1);
     const [curvePattern, setCurvePattern] = useState(Boolean(legacyState.curvePattern));
     const [palette, setPalette] = useState('standard');
@@ -300,7 +300,7 @@ const handleHiResDownloadJPG = () => {
         ];
         
         // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'Ngram Data');
+        XLSX.utils.book_append_sheet(wb, ws, 'ngram data');
         
         // Generate Excel file
         XLSX.writeFile(wb, `ngram_data_${new Date().toISOString().split('T')[0]}.xlsx`);

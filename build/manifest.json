@@ -1,6 +1,6 @@
 {
-  "short_name": "Ngram PWA",
-  "name": "Ngram Progressive Web App",
+  "short_name": "ngram",
+  "name": "ngram",
   "icons": [
     {
       "src": "favicon.ico",

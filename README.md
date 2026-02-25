@@ -1,7 +1,7 @@
-# Ngram Viewer - National Library of Norway 🇳🇴 (README.no.md)
+# ngram Viewer - National Library of Norway 🇳🇴 (README.no.md)
 
 A modern, interactive web application for exploring word frequencies in the National Library of Norway's digital collections. This tool allows users to analyze and visualize how word usage has evolved over time in both books and newspapers.
-Here is a link [N-gram](https://nationallibraryofnorway.github.io/dhlab-app-nb-ngram/) to explore the viewer.
+Here is a link [ngram](https://nationallibraryofnorway.github.io/dhlab-app-nb-ngram/) to explore the viewer.
 
 ## Features
 

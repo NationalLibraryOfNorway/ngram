@@ -1,6 +1,6 @@
 # Maintenance Guide
 
-Praktisk guide for videre vedlikehold av N-gram-appen, med fokus pa:
+Praktisk guide for videre vedlikehold av ngram-appen, med fokus pa:
 - designendringer
 - API/endepunkt-endringer
 - trygg deploy
