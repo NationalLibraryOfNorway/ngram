@@ -203,13 +203,17 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, settings, onSetting
     ];
 
     const languages = [
-        { code: 'nob', label: 'Bokmål', fullName: 'Norsk bokmål' },
-        { code: 'nno', label: 'Nynorsk', fullName: 'Norsk nynorsk' },
-        { code: 'sme', label: 'Nordsamisk', fullName: 'Davvisámegiella' },
-        { code: 'sma', label: 'Sørsamisk', fullName: 'Åarjelsaemien gïele' },
-        { code: 'smj', label: 'Lulesamisk', fullName: 'Julevsámegiella' },
-        { code: 'fkv', label: 'Kvensk', fullName: 'Kainun kieli' }
+        { code: 'nob', label: 'bokmål', fullName: 'bokmål' },
+        { code: 'nno', label: 'nynorsk', fullName: 'nynorsk' },
+        { code: 'sme', label: 'nordsamisk', fullName: 'davvisámegiella' },
+        { code: 'sma', label: 'sørsamisk', fullName: 'åarjelsaemien gïele' },
+        { code: 'smj', label: 'lulesamisk', fullName: 'julevsámegiella' },
+        { code: 'fkv', label: 'kvensk', fullName: 'kainun kieli' }
     ];
+    const selectedLanguage = languages.find((language) => language.code === lang);
+    const languageButtonLabel = corpus === 'avis'
+        ? 'norsk (avis)'
+        : (selectedLanguage?.fullName || lang);
 
     const handleHiResDownloadPNG = () => {
     if (!data?.series) return;
@@ -319,50 +323,10 @@ const handleHiResDownloadJPG = () => {
                             placeholder={DEFAULT_START_TERM}
                             aria-label="Search words"
                             style={{ 
-                                borderRight: 'none',
                                 minWidth: '200px',
                                 flex: '1 1 auto'
                             }}
                         />
-                        <div className="dropdown" ref={langDropdownRef}>
-                            <button
-                                className="btn btn-outline-secondary dropdown-toggle"
-                                type="button"
-                                onClick={() => {
-                                    setShowLangDropdown((prev) => !prev);
-                                    setShowCorpusDropdown(false);
-                                    setShowGraphTypeDropdown(false);
-                                }}
-                                style={{ 
-                                    borderLeft: 'none',
-                                    borderRadius: '0',
-                                    borderTop: '1px solid #ced4da',
-                                    borderBottom: '1px solid #ced4da',
-                                    borderRight: '1px solid #ced4da'
-                                }}
-                                disabled={corpus === 'avis'}
-                                title={languages.find(l => l.code === lang)?.fullName || lang}
-                            >
-                                {corpus === 'avis' ? 'nor' : lang}
-                            </button>
-                            {showLangDropdown && corpus !== 'avis' && (
-                                <div className="dropdown-menu show">
-                                    {languages.map(language => (
-                                        <button
-                                            key={language.code}
-                                            className="dropdown-item"
-                                            onClick={() => {
-                                                setLang(language.code);
-                                                setShowLangDropdown(false);
-                                            }}
-                                            title={language.fullName}
-                                    >
-                                            {language.label}
-                                        </button>
-                                ))}
-                                </div>
-                            )}
-                        </div>
                         <Button 
                             variant="outline-secondary" 
                             type="submit"
@@ -370,7 +334,6 @@ const handleHiResDownloadJPG = () => {
                             style={{
                                 backgroundColor: 'white',
                                 border: '1px solid #ced4da',
-                                borderLeft: 'none',
                                 color: '#212529'
                             }}
                         >
@@ -380,6 +343,47 @@ const handleHiResDownloadJPG = () => {
                 </Form>
 
                     <div className="d-flex gap-2">
+                    <div className="dropdown" ref={langDropdownRef}>
+                        <button
+                            className="btn btn-outline-secondary dropdown-toggle"
+                            type="button"
+                            onClick={() => {
+                                setShowLangDropdown((prev) => !prev);
+                                setShowCorpusDropdown(false);
+                                setShowGraphTypeDropdown(false);
+                            }}
+                            style={{ 
+                                border: 'none',
+                                minWidth: '120px',
+                                maxWidth: '170px',
+                                textAlign: 'left',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}
+                            disabled={corpus === 'avis'}
+                            title={languageButtonLabel}
+                        >
+                            {languageButtonLabel}
+                        </button>
+                        {showLangDropdown && corpus !== 'avis' && (
+                            <div className="dropdown-menu show">
+                                {languages.map(language => (
+                                    <button
+                                        key={language.code}
+                                        className="dropdown-item"
+                                        onClick={() => {
+                                            setLang(language.code);
+                                            setShowLangDropdown(false);
+                                        }}
+                                        title={language.fullName}
+                                    >
+                                        {language.fullName}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <ButtonGroup>
                         <div className="dropdown" ref={corpusDropdownRef}>
                             <button
