@@ -261,16 +261,19 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
             const withMarker = settings?.curvePattern && variantCycle > 0;
             const markerStyle = POINT_STYLES[(variantCycle - 1) % POINT_STYLES.length] || 'circle';
             
-            // Apply smoothing if enabled
-            if (settings.smoothing > 0) {
-                const smoothed = [];
-                for (let i = 0; i < values.length; i++) {
-                    const start = Math.max(0, i - Math.floor(settings.smoothing / 2));
-                    const end = Math.min(values.length - 1, i + Math.floor(settings.smoothing / 2));
-                    const window = values.slice(start, end + 1);
-                    const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
-                    smoothed.push(avg);
+            // Apply causal EMA smoothing (no look-ahead into future points).
+            const smoothingYears = Math.max(0, Number.parseInt(settings.smoothing, 10) || 0);
+            if (smoothingYears > 0 && values.length > 0) {
+                const alpha = 2 / (Math.max(1, smoothingYears) + 1);
+                let ema = Number(values[0]) || 0;
+                const smoothed = [ema];
+
+                for (let i = 1; i < values.length; i++) {
+                    const sample = Number(values[i]) || 0;
+                    ema = (alpha * sample) + ((1 - alpha) * ema);
+                    smoothed.push(ema);
                 }
+
                 values = smoothed;
             }
             
@@ -320,7 +323,8 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
                 pointStyle: withMarker
                     ? markerStyle
                     : 'circle',
-                tension: 0.4,
+                cubicInterpolationMode: 'monotone',
+                tension: 0,
                 showLine: true,
                 borderDash: settings?.curvePattern
                     ? DASH_PATTERNS[patternIndex]
