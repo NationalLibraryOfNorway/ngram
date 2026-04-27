@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Form, Button, ButtonGroup, InputGroup, Modal } from 'react-bootstrap';
-import { FaSearch, FaTools, FaDownload } from 'react-icons/fa';
-import * as XLSX from 'xlsx';
+import { FaSearch } from 'react-icons/fa';
+import { FiSettings } from 'react-icons/fi';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
 import { parseLegacyHash } from '../services/legacyHash';
-
 const DEFAULT_START_TERM = 'demokrati';
 const clampYear = (value, min, max) => Math.min(max, Math.max(min, value));
 const sanitizeZoomRange = (startCandidate, endCandidate) => {
@@ -36,7 +35,6 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, settings, onSetting
     const [showCorpusDropdown, setShowCorpusDropdown] = useState(false);
     const [showGraphTypeDropdown, setShowGraphTypeDropdown] = useState(false);
     const [showToolsModal, setShowToolsModal] = useState(false);
-    const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [capitalization, setCapitalization] = useState(Boolean(legacyState.capitalization));
     const [smoothing, setSmoothing] = useState(legacyState.smoothing ?? 4);
     const [lineThickness, setLineThickness] = useState(3);
@@ -215,102 +213,6 @@ const SearchControls = ({ onSearch, onGraphTypeChange, data, settings, onSetting
         ? 'norsk (avis)'
         : (selectedLanguage?.fullName || lang);
 
-    const handleHiResDownloadPNG = () => {
-    if (!data?.series) return;
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return;
-
-    const scale = 4; // Gir god kvalitet for publisering
-    const hiResCanvas = document.createElement('canvas');
-    hiResCanvas.width = canvas.width * scale;
-    hiResCanvas.height = canvas.height * scale;
-    const ctx = hiResCanvas.getContext('2d');
-    ctx.scale(scale, scale);
-    ctx.drawImage(canvas, 0, 0);
-
-    const link = document.createElement('a');
-    link.download = `ngram_graph_hires_${new Date().toISOString().split('T')[0]}.png`;
-    link.href = hiResCanvas.toDataURL('image/png');
-    link.click();
-    setShowDownloadModal(false);
-};
-
-const handleHiResDownloadJPG = () => {
-    if (!data?.series) return;
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return;
-
-    const scale = 4; // Gir god kvalitet for publisering
-    const hiResCanvas = document.createElement('canvas');
-    hiResCanvas.width = canvas.width * scale;
-    hiResCanvas.height = canvas.height * scale;
-    const ctx = hiResCanvas.getContext('2d');
-    ctx.scale(scale, scale);
-    ctx.drawImage(canvas, 0, 0);
-
-    const link = document.createElement('a');
-    link.download = `ngram_graph_hires_${new Date().toISOString().split('T')[0]}.jpg`;
-    link.href = hiResCanvas.toDataURL('image/jpeg', 1.0);
-    link.click();
-    setShowDownloadModal(false);
-};
-
-    const handleDownloadCSV = () => {
-        if (!data?.series) return;
-        // Create CSV content
-        const headers = ['Year', ...data.series.map(s => s.name)];
-        const rows = data.dates.map((year, i) => {
-            const values = data.series.map(s => s.data[i]);
-            return [year, ...values];
-        });
-        
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n');
-        
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `ngram_data_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        setShowDownloadModal(false);
-    };
-
-    const handleDownloadExcel = () => {
-        if (!data?.series) return;
-        // Create Excel workbook
-        const wb = XLSX.utils.book_new();
-        
-        // Create worksheet data
-        const wsData = [
-            ['Year', ...data.series.map(s => s.name)],
-            ...data.dates.map((year, i) => {
-                const values = data.series.map(s => s.data[i]);
-                return [year, ...values];
-            })
-        ];
-        
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        // Add metadata
-        ws['!cols'] = [
-            { wch: 10 }, // Year column width
-            ...data.series.map(() => ({ wch: 15 })) // Data columns width
-        ];
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'N-gram data');
-        
-        // Generate Excel file
-        XLSX.writeFile(wb, `ngram_data_${new Date().toISOString().split('T')[0]}.xlsx`);
-        setShowDownloadModal(false);
-    };
-
     return (
         <div className="d-flex flex-column flex-md-row gap-3 align-items-start w-100">
             <div className="d-flex flex-column flex-md-row gap-3 align-items-start w-100">
@@ -480,24 +382,16 @@ const handleHiResDownloadJPG = () => {
                         <Button 
                             variant="outline-secondary"
                             size="sm"
-                            onClick={() => setShowDownloadModal(true)}
-                            style={{ 
-                                border: 'none',
-                                backgroundColor: 'white'
-                            }}
-                        >
-                            <FaDownload />
-                        </Button>
-                        <Button 
-                            variant="outline-secondary"
-                            size="sm"
                             onClick={() => setShowToolsModal(true)}
+                            className="icon-button icon-button--toolbar"
+                            title="Verktøy og innstillinger"
+                            aria-label="Verktøy og innstillinger"
                             style={{ 
                                 border: 'none',
                                 backgroundColor: 'white'
                             }}
                         >
-                            <FaTools />
+                            <FiSettings aria-hidden="true" />
                         </Button>
                     </div>
                 </div>
@@ -519,43 +413,6 @@ const handleHiResDownloadJPG = () => {
                                 {type.label}
                             </Button>
                         ))}
-                    </div>
-                </Modal.Body>
-            </Modal>
-
-            <Modal show={showDownloadModal} onHide={() => setShowDownloadModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Last ned graf</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <div className="d-grid gap-3">
-                        <Button
-                            variant="outline-primary"
-                            onClick={handleHiResDownloadPNG}
-                        >
-                            Last ned høyoppløselig PNG
-                        </Button>
-                        <Button
-                            variant="outline-primary"
-                            onClick={handleHiResDownloadJPG}
-                        >
-                            Last ned høyoppløselig JPG
-                        </Button>
-                        <Button
-                            variant="outline-primary"
-                            onClick={handleDownloadCSV}
-                        >
-                            Last ned som CSV
-                        </Button>
-                        <Button
-                            variant="outline-success"
-                            onClick={handleDownloadExcel}
-                        >
-                            Last ned som Excel
-                        </Button>
-                    </div>
-                    <div className="mt-3 text-muted help-muted" style={{fontSize: '0.95em'}}>
-                        Bildene egner seg for bruk i publikasjoner og tidsskrifter.
                     </div>
                 </Modal.Body>
             </Modal>

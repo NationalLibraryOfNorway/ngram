@@ -1,168 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
+import React, { useState } from 'react';
 import { Modal } from 'react-bootstrap';
-import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
+import { FiDownload, FiInfo } from 'react-icons/fi';
+import DownloadMenu from './DownloadMenu';
 
-const AppHeader = ({ data, query, settings }) => {
-    const [isOpen, setIsOpen] = useState(false);
+const AppHeader = ({ data, shareUrl }) => {
     const [showAbout, setShowAbout] = useState(false);
-    const [copyStatus, setCopyStatus] = useState('');
-    const [isHoverDropdownEnabled, setIsHoverDropdownEnabled] = useState(false);
-    const dropdownRef = useRef(null);
-    const hoverOpenTimeoutRef = useRef(null);
-    const hoverCloseTimeoutRef = useRef(null);
-
-    const shareUrl = useMemo(() => {
-        const params = new URLSearchParams({
-            terms: (query?.words || []).join(','),
-            mode: query?.graphType || 'relative',
-            corpus: query?.corpus || 'bok',
-            lang: query?.lang || 'nob',
-            case: settings?.capitalization ? '1' : '0',
-            smooth: String(settings?.smoothing ?? 3),
-            scale: String(settings?.scaling ?? 'auto'),
-            pattern: settings?.curvePattern ? '1' : '0',
-            from: String(settings?.zoomStart ?? MIN_YEAR),
-            to: String(settings?.zoomEnd ?? MAX_YEAR)
-        });
-
-        const url = new URL(window.location.href);
-        url.hash = `v2?${params.toString()}`;
-        return url.toString();
-    }, [query, settings]);
-
-    const copyShareLink = async () => {
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            setCopyStatus('Lenke kopiert');
-        } catch {
-            setCopyStatus('Kunne ikke kopiere lenken');
-        }
-        setIsOpen(false);
-        setTimeout(() => setCopyStatus(''), 2000);
-    };
-
-    const downloadChartImage = () => {
-        const canvas = document.querySelector('canvas');
-        if (!canvas) return;
-        const link = document.createElement('a');
-        link.download = `ngram_graph_${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        setIsOpen(false);
-    };
-
-    const downloadDataFrameExcel = () => {
-        if (!data?.series || !data?.dates) return;
-
-        const worksheetData = [
-            ['Year', ...data.series.map((series) => series.name)],
-            ...data.dates.map((year, index) => {
-                const values = data.series.map((series) => series.data[index]);
-                return [year, ...values];
-            })
-        ];
-
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'N-gram data');
-        XLSX.writeFile(workbook, `ngram_data_${new Date().toISOString().split('T')[0]}.xlsx`);
-        setIsOpen(false);
-    };
-
-    useEffect(() => {
-        const clearHoverTimers = () => {
-            if (hoverOpenTimeoutRef.current) {
-                clearTimeout(hoverOpenTimeoutRef.current);
-                hoverOpenTimeoutRef.current = null;
-            }
-            if (hoverCloseTimeoutRef.current) {
-                clearTimeout(hoverCloseTimeoutRef.current);
-                hoverCloseTimeoutRef.current = null;
-            }
-        };
-
-        const mediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
-        const syncHoverCapability = () => {
-            setIsHoverDropdownEnabled(mediaQuery.matches);
-        };
-        syncHoverCapability();
-        mediaQuery.addEventListener('change', syncHoverCapability);
-
-        return () => {
-            clearHoverTimers();
-            mediaQuery.removeEventListener('change', syncHoverCapability);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!isOpen) {
-            return;
-        }
-
-        const onPointerDownOutside = (event) => {
-            if (!dropdownRef.current?.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-
-        const onEscape = (event) => {
-            if (event.key === 'Escape') {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', onPointerDownOutside);
-        document.addEventListener('touchstart', onPointerDownOutside);
-        document.addEventListener('keydown', onEscape);
-
-        return () => {
-            document.removeEventListener('mousedown', onPointerDownOutside);
-            document.removeEventListener('touchstart', onPointerDownOutside);
-            document.removeEventListener('keydown', onEscape);
-        };
-    }, [isOpen]);
-
-    const clearHoverTimers = () => {
-        if (hoverOpenTimeoutRef.current) {
-            clearTimeout(hoverOpenTimeoutRef.current);
-            hoverOpenTimeoutRef.current = null;
-        }
-        if (hoverCloseTimeoutRef.current) {
-            clearTimeout(hoverCloseTimeoutRef.current);
-            hoverCloseTimeoutRef.current = null;
-        }
-    };
-
-    const handleShareMouseEnter = () => {
-        if (!isHoverDropdownEnabled) {
-            return;
-        }
-        if (hoverCloseTimeoutRef.current) {
-            clearTimeout(hoverCloseTimeoutRef.current);
-            hoverCloseTimeoutRef.current = null;
-        }
-        if (!isOpen) {
-            hoverOpenTimeoutRef.current = setTimeout(() => {
-                setIsOpen(true);
-                hoverOpenTimeoutRef.current = null;
-            }, 150);
-        }
-    };
-
-    const handleShareMouseLeave = () => {
-        if (!isHoverDropdownEnabled) {
-            return;
-        }
-        if (hoverOpenTimeoutRef.current) {
-            clearTimeout(hoverOpenTimeoutRef.current);
-            hoverOpenTimeoutRef.current = null;
-        }
-        hoverCloseTimeoutRef.current = setTimeout(() => {
-            setIsOpen(false);
-            hoverCloseTimeoutRef.current = null;
-        }, 220);
-    };
 
     return (
         <header className="header">
@@ -194,42 +36,21 @@ const AppHeader = ({ data, query, settings }) => {
                     <div className="header-actions">
                         <button
                             type="button"
-                            className="custom-button no-border dropdown-button"
+                            className="icon-button icon-button--header"
                             onClick={() => setShowAbout(true)}
+                            title="Om N-gram"
+                            aria-label="Om N-gram"
                         >
-                            Om N-gram
+                            <FiInfo aria-hidden="true" />
                         </button>
-                        <div
-                            className="dropdown"
-                            ref={dropdownRef}
-                            onMouseEnter={handleShareMouseEnter}
-                            onMouseLeave={handleShareMouseLeave}
-                        >
-                            <button
-                                type="button"
-                                className="custom-button no-border dropdown-button"
-                                onClick={() => {
-                                    clearHoverTimers();
-                                    setIsOpen((prev) => !prev);
-                                }}
-                            >
-                                Delingsalternativer
-                            </button>
-                            {isOpen && (
-                                <div className="dropdown-content">
-                                    <button type="button" className="sharing-link" onClick={downloadDataFrameExcel} disabled={!data?.series}>
-                                        Dataramme (.xlsx)
-                                    </button>
-                                    <button type="button" className="sharing-link" onClick={downloadChartImage}>
-                                        Grafikk (.png)
-                                    </button>
-                                    <button type="button" className="sharing-link" onClick={copyShareLink}>
-                                        Kopier lenken til N-gram
-                                    </button>
-                                    {copyStatus && <span className="copy-status">{copyStatus}</span>}
-                                </div>
-                            )}
-                        </div>
+                        <DownloadMenu
+                            data={data}
+                            shareUrl={shareUrl}
+                            buttonClassName="icon-button icon-button--header"
+                            buttonTitle="Nedlasting og deling"
+                            menuAlign="right"
+                            trigger={<FiDownload aria-hidden="true" />}
+                        />
                     </div>
                 </div>
             </div>

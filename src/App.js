@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import SearchControls from './components/SearchControls';
 import NgramChartRecharts from './components/NgramChartRecharts';
@@ -28,6 +28,24 @@ function App() {
         graphType: 'relative'
     });
     const lastRequestKeyRef = useRef('');
+    const shareUrl = useMemo(() => {
+        const params = new URLSearchParams({
+            terms: (lastQuery?.words || []).join(','),
+            mode: lastQuery?.graphType || 'relative',
+            corpus: lastQuery?.corpus || 'bok',
+            lang: lastQuery?.lang || 'nob',
+            case: settings?.capitalization ? '1' : '0',
+            smooth: String(settings?.smoothing ?? 3),
+            scale: String(settings?.scaling ?? 'auto'),
+            pattern: settings?.curvePattern ? '1' : '0',
+            from: String(settings?.zoomStart ?? MIN_YEAR),
+            to: String(settings?.zoomEnd ?? MAX_YEAR)
+        });
+
+        const url = new URL(window.location.href);
+        url.hash = `v2?${params.toString()}`;
+        return url.toString();
+    }, [lastQuery, settings]);
 
     const handleSearch = async (words, corpus, lang, graphType) => {
         const requestKey = JSON.stringify({
@@ -70,7 +88,7 @@ function App() {
 
     return (
         <>
-            <AppHeader data={data} query={lastQuery} settings={settings} />
+            <AppHeader data={data} shareUrl={shareUrl} />
             <Container fluid className="app-main-content">
             <div className="app-search-row mb-4">
                     <SearchControls 
