@@ -238,28 +238,27 @@ const AppHeader = ({ data, query, settings }) => {
                     <Modal.Title>Om N-gram</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <p>N-gram viser hvordan ordbruk utvikler seg over tid i Nasjonalbibliotekets materialer.</p>
+                    <p>NB N-gram viser bruk av ord over tid. Tjenesten bygger på digitaliserte bøker og aviser fra Nasjonalbibliotekets samling.</p>
 
                     <div style={{ marginBottom: '0.75rem' }}>
-                        <strong className="help-section-title">Søk-innstillinger</strong>
+                        <strong className="help-section-title">Søk</strong>
                         <div className="help-section-body">
-                            Skriv inn ett eller flere ord (komma-separert), velg korpus, språk og grafmodus.
-                            Feltet viser "demokrati" som forslag ved oppstart.
+                            Ved siden av enkeltord er det mulig å søke på sekvenser av opptil tre ord, f. eks. navn: Gro Harlem Brundtland eller Mo i Rana. Ved bruk av komma kan man søke på inntil ti enkeltord eller ordsekvenser samtidig.
+
+                            <p>Eksempler:</p>
+                            <ul>
+                                <li>*dag gir de ti mest frekvente ordene som slutter på -dag.</li>
+                                <li>* dag gir de ti mest frekvente to-ordssekvensene der dag er det siste ordet.</li>
+                                <li>bil+bilen+biler+bilene gir én samlet graf.</li>
+                                <li>(i på) (Hamar Gjøvik) gir søk for disse fire kombinasjonene.</li>
+                            </ul>
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '0.75rem' }}>
-                        <strong className="help-section-title">Periodevelger (zoom-home)</strong>
+                        <strong className="help-section-title">Verktøy</strong>
                         <div className="help-section-body">
-                            Start- og sluttår definerer standardvisning og hva som brukes når du resetter zoom.
-                            Zoom inn ved å klikke og dra i grafen.
-                        </div>
-                    </div>
-
-                    <div style={{ marginBottom: '0.75rem' }}>
-                        <strong className="help-section-title">Grafinnstillinger</strong>
-                        <div className="help-section-body">
-                            Juster utjevning, fargepalett, linjetykkelse, transparens og eventuelt kurvemønstre.
+                            Utjevning av kurve: fire år summerer fire år før og fire år etter det aktuelle året og deler på ni (antall år totalt).
                         </div>
                     </div>
 
@@ -274,7 +273,7 @@ const AppHeader = ({ data, query, settings }) => {
                     <div>
                         <strong className="help-section-title">Delingsalternativer</strong>
                         <div className="help-section-body">
-                            Last ned dataramme (Excel), lagre grafikk som PNG eller kopier delbar lenke.
+                            Last ned tabell (Excel), lagre grafikk som PNG eller kopier delbar lenke.
                             Høyoppløselige figurer for publikasjon finnes under nedlastingsknappen i verktøyene.
                         </div>
                     </div>
