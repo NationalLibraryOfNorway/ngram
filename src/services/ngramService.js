@@ -87,13 +87,18 @@ const normalizeNbSearchTerm = (name) => {
         tokens.push(trimmed);
     }
 
-    return tokens.length > 0 ? tokens.join(' OR ') : input.trim();
+    if (tokens.length > 1) {
+        return tokens.join(' OR ');
+    }
+
+    const fallback = tokens[0] || input.trim();
+    return `"${fallback}"`;
 };
 
 // Create National Library search query URL
 const makeNbQuery = (name, mediatype, startDate, endDate) => {
     const params = new URLSearchParams({
-        q: `"${normalizeNbSearchTerm(name)}"`,
+        q: normalizeNbSearchTerm(name),
         mediatype: mediatype
     });
     if (startDate) {
