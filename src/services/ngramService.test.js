@@ -33,4 +33,10 @@ describe('makeNbQuery', () => {
 
         expect(url.searchParams.get('q')).toBe('","');
     });
+
+    test('escapes embedded quotes in single-term searches', () => {
+        const url = new URL(makeNbQuery('foo"bar', 'bøker', '', ''));
+
+        expect(url.searchParams.get('q')).toBe('"foo\\"bar"');
+    });
 });

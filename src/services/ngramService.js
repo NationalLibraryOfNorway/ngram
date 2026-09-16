@@ -59,6 +59,8 @@ const fetchNgramData = async (words, fromYear, toYear, doctype, lang, mode, smoo
     }
 };
 
+const quoteNbSearchTerm = (term) => `"${String(term).replace(/"/g, '\\"')}"`;
+
 const normalizeNbSearchTerm = (name) => {
     const tokens = [];
     let current = '';
@@ -92,7 +94,7 @@ const normalizeNbSearchTerm = (name) => {
     }
 
     const fallback = tokens[0] || input.trim();
-    return `"${fallback}"`;
+    return quoteNbSearchTerm(fallback);
 };
 
 // Create National Library search query URL
