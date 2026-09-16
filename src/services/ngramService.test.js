@@ -28,15 +28,23 @@ describe('makeNbQuery', () => {
         expect(url.searchParams.get('q')).toBe('"C++"');
     });
 
+    test('keeps a single grouped term unquoted when surrounded by delimiters', () => {
+        const plusUrl = new URL(makeNbQuery('+and+', 'bøker', '', ''));
+        const commaUrl = new URL(makeNbQuery(',and,', 'bøker', '', ''));
+
+        expect(plusUrl.searchParams.get('q')).toBe('and');
+        expect(commaUrl.searchParams.get('q')).toBe('and');
+    });
+
     test('falls back to the original trimmed input when no grouped terms are extracted', () => {
         const url = new URL(makeNbQuery(',', 'bøker', '', ''));
 
         expect(url.searchParams.get('q')).toBe('","');
     });
 
-    test('escapes embedded quotes in single-term searches', () => {
-        const url = new URL(makeNbQuery('foo"bar', 'bøker', '', ''));
+    test('escapes embedded quotes and backslashes in single-term searches', () => {
+        const url = new URL(makeNbQuery('foo\\bar"baz', 'bøker', '', ''));
 
-        expect(url.searchParams.get('q')).toBe('"foo\\"bar"');
+        expect(url.searchParams.get('q')).toBe('"foo\\\\bar\\"baz"');
     });
 });
