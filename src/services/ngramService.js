@@ -1,3 +1,5 @@
+import { fetchNgramData as fetchData, MIN_YEAR, MAX_YEAR } from './ngramProcessor';
+
 // Constants
 const SCHEMES = ['light', 'dark', 'ggplot2', 'seaborn'];
 const LANGUAGES = ['nob', 'nno', 'sme', 'fkv'];
@@ -11,8 +13,6 @@ const CORPORA = [
     { label: 'Avis', value: 'avis' },
     { label: 'Bok', value: 'bok' }
 ];
-
-import { fetchNgramData as fetchData, MIN_YEAR, MAX_YEAR } from './ngramProcessor';
 
 // Process data based on selected mode
 const processChartData = (data, mode, smooth) => {
@@ -59,14 +59,67 @@ const fetchNgramData = async (words, fromYear, toYear, doctype, lang, mode, smoo
     }
 };
 
+const quoteNbSearchTerm = (term) => `"${String(term)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')}"`;
+const formatGroupedNbSearchTerm = (term) => (
+    /["\\\s]/.test(term) ? quoteNbSearchTerm(term) : term
+);
+
+const normalizeNbSearchTerm = (name) => {
+    const tokens = [];
+    let current = '';
+    const input = String(name);
+    let hadGroupingDelimiter = false;
+
+    for (let index = 0; index < input.length; index += 1) {
+        const character = input[index];
+        const previous = input[index - 1];
+        const next = input[index + 1];
+        const isIsolatedPlusDelimiter = character === '+' && previous !== '+' && next !== '+';
+
+        if (character === ',' || isIsolatedPlusDelimiter) {
+            hadGroupingDelimiter = true;
+            const trimmed = current.trim();
+            if (trimmed) {
+                tokens.push(trimmed);
+            }
+            current = '';
+            continue;
+        }
+
+        current += character;
+    }
+
+    const trimmed = current.trim();
+    if (trimmed) {
+        tokens.push(trimmed);
+    }
+
+    if (tokens.length > 1) {
+        return tokens.map(formatGroupedNbSearchTerm).join(' OR ');
+    }
+
+    if (tokens.length === 1 && hadGroupingDelimiter) {
+        return tokens[0];
+    }
+
+    const fallback = tokens[0] || input.trim();
+    return quoteNbSearchTerm(fallback);
+};
+
 // Create National Library search query URL
 const makeNbQuery = (name, mediatype, startDate, endDate) => {
     const params = new URLSearchParams({
-        q: `"${name}"`,
-        fromDate: startDate,
-        toDate: endDate,
+        q: normalizeNbSearchTerm(name),
         mediatype: mediatype
     });
+    if (startDate) {
+        params.set('fromDate', startDate);
+    }
+    if (endDate) {
+        params.set('toDate', endDate);
+    }
     return `https://www.nb.no/search?${params.toString()}`;
 };
 
