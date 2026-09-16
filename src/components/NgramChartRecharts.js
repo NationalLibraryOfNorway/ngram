@@ -3,6 +3,7 @@ import { Button, Modal } from 'react-bootstrap';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { MIN_YEAR, MAX_YEAR } from '../services/ngramProcessor';
+import { makeNbQuery } from '../services/ngramService';
 import { FaUndo } from 'react-icons/fa';
 
 const AUTO_PERCENT_THRESHOLD = 0.01;
@@ -188,7 +189,7 @@ const NgramChartRecharts = ({ data, graphType = 'relative', settings = {
         }
 
         const mediatype = corpusType === 'avis' ? 'aviser' : 'bøker';
-        const searchUrl = `https://www.nb.no/search?q="${encodeURIComponent(selectedWord)}"&mediatype=${mediatype}${fromDate ? `&fromDate=${fromDate}` : ''}${toDate ? `&toDate=${toDate}` : ''}`;
+        const searchUrl = makeNbQuery(selectedWord, mediatype, fromDate, toDate);
         window.open(searchUrl, '_blank');
         setShowSearchModal(false);
     };

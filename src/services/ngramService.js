@@ -1,3 +1,5 @@
+import { fetchNgramData as fetchData, MIN_YEAR, MAX_YEAR } from './ngramProcessor';
+
 // Constants
 const SCHEMES = ['light', 'dark', 'ggplot2', 'seaborn'];
 const LANGUAGES = ['nob', 'nno', 'sme', 'fkv'];
@@ -11,8 +13,6 @@ const CORPORA = [
     { label: 'Avis', value: 'avis' },
     { label: 'Bok', value: 'bok' }
 ];
-
-import { fetchNgramData as fetchData, MIN_YEAR, MAX_YEAR } from './ngramProcessor';
 
 // Process data based on selected mode
 const processChartData = (data, mode, smooth) => {
@@ -59,14 +59,24 @@ const fetchNgramData = async (words, fromYear, toYear, doctype, lang, mode, smoo
     }
 };
 
+const normalizeNbSearchTerm = (name) => String(name)
+    .split(/[,+]/)
+    .map((term) => term.trim())
+    .filter(Boolean)
+    .join(' OR ');
+
 // Create National Library search query URL
 const makeNbQuery = (name, mediatype, startDate, endDate) => {
     const params = new URLSearchParams({
-        q: `"${name}"`,
-        fromDate: startDate,
-        toDate: endDate,
+        q: `"${normalizeNbSearchTerm(name)}"`,
         mediatype: mediatype
     });
+    if (startDate) {
+        params.set('fromDate', startDate);
+    }
+    if (endDate) {
+        params.set('toDate', endDate);
+    }
     return `https://www.nb.no/search?${params.toString()}`;
 };
 
