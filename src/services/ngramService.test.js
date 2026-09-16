@@ -47,4 +47,10 @@ describe('makeNbQuery', () => {
 
         expect(url.searchParams.get('q')).toBe('"foo\\\\bar\\"baz"');
     });
+
+    test('escapes grouped terms only when needed', () => {
+        const url = new URL(makeNbQuery('foo\\bar"baz,qux', 'bøker', '', ''));
+
+        expect(url.searchParams.get('q')).toBe('"foo\\\\bar\\"baz" OR qux');
+    });
 });

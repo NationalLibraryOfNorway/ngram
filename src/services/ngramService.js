@@ -62,6 +62,9 @@ const fetchNgramData = async (words, fromYear, toYear, doctype, lang, mode, smoo
 const quoteNbSearchTerm = (term) => `"${String(term)
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')}"`;
+const formatGroupedNbSearchTerm = (term) => (
+    /["\\\s]/.test(term) ? quoteNbSearchTerm(term) : term
+);
 
 const normalizeNbSearchTerm = (name) => {
     const tokens = [];
@@ -94,7 +97,7 @@ const normalizeNbSearchTerm = (name) => {
     }
 
     if (tokens.length > 1) {
-        return tokens.join(' OR ');
+        return tokens.map(formatGroupedNbSearchTerm).join(' OR ');
     }
 
     if (tokens.length === 1 && hadGroupingDelimiter) {
