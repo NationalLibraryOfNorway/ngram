@@ -87,7 +87,7 @@ const normalizeNbSearchTerm = (name) => {
         tokens.push(trimmed);
     }
 
-    return tokens.join(' OR ');
+    return tokens.length > 0 ? tokens.join(' OR ') : input.trim();
 };
 
 // Create National Library search query URL

@@ -27,4 +27,10 @@ describe('makeNbQuery', () => {
 
         expect(url.searchParams.get('q')).toBe('"C++"');
     });
+
+    test('falls back to the original trimmed input when no grouped terms are extracted', () => {
+        const url = new URL(makeNbQuery(',', 'bøker', '', ''));
+
+        expect(url.searchParams.get('q')).toBe('","');
+    });
 });
