@@ -21,4 +21,10 @@ describe('makeNbQuery', () => {
         expect(url.searchParams.get('fromDate')).toBeNull();
         expect(url.searchParams.get('toDate')).toBeNull();
     });
+
+    test('does not rewrite plus signs inside a single term', () => {
+        const url = new URL(makeNbQuery('C++', 'bøker', '', ''));
+
+        expect(url.searchParams.get('q')).toBe('"C++"');
+    });
 });

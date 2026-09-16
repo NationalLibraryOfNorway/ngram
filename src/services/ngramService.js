@@ -59,11 +59,36 @@ const fetchNgramData = async (words, fromYear, toYear, doctype, lang, mode, smoo
     }
 };
 
-const normalizeNbSearchTerm = (name) => String(name)
-    .split(/[,+]/)
-    .map((term) => term.trim())
-    .filter(Boolean)
-    .join(' OR ');
+const normalizeNbSearchTerm = (name) => {
+    const tokens = [];
+    let current = '';
+    const input = String(name);
+
+    for (let index = 0; index < input.length; index += 1) {
+        const character = input[index];
+        const previous = input[index - 1];
+        const next = input[index + 1];
+        const isIsolatedPlusDelimiter = character === '+' && previous !== '+' && next !== '+';
+
+        if (character === ',' || isIsolatedPlusDelimiter) {
+            const trimmed = current.trim();
+            if (trimmed) {
+                tokens.push(trimmed);
+            }
+            current = '';
+            continue;
+        }
+
+        current += character;
+    }
+
+    const trimmed = current.trim();
+    if (trimmed) {
+        tokens.push(trimmed);
+    }
+
+    return tokens.join(' OR ');
+};
 
 // Create National Library search query URL
 const makeNbQuery = (name, mediatype, startDate, endDate) => {
